@@ -25,7 +25,7 @@ public:
         const float costThreshold );
 
 private:
-    void activate(
+    void forwardProp(
         const float* featureMat,
         const unsigned short* classIndexVec );
     void backProp(
