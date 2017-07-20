@@ -13,17 +13,17 @@ int main()
 
     // printf( "num fea: %d\n", trainSetImporter.GetNumFeatures() );
 
-    const unsigned int architecture[3] = { 1001, 11, 1 };
+    const unsigned int architecture[3] = { 1001, 1 };
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         trainSetImporter.GetNumInstances(),
-        2,
+        1,
         architecture );
     neuralNetwork.train(
         trainSetImporter.GetFeatureMat(),
         trainSetImporter.GetClassIndex(),
-        1,
-        5,
+        2,
+        10.0f,
         1.0f );
     // neuralNetwork.Classify(
     //     testSetImporter.GetInstances(),

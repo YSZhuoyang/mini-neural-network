@@ -5,9 +5,8 @@
 #include "Helper.h"
 
 
-#define FIRST_HIDDEN_LAYER  0
-#define MIDDLE_HIDDEN_LAYER 1
-#define OUTPUT_LAYER        2
+#define HIDDEN_LAYER 0
+#define OUTPUT_LAYER 1
 
 class Layer
 {
@@ -24,7 +23,13 @@ public:
     float* forwardOutput( const float* inputMat );
     float* getOutputPtr();
     float* getErrorPtr();
-    void backPropError( float* preLayerErrorMat, const float* inputMat );
+    float* getWeightPtr();
+    void backPropError(
+        float* preLayerErrorMat,
+        const float* inputMat );
+    void updateWeights(
+        const float* inputMat,
+        const float learningRate );
     void computeOutputLayerError( const unsigned short* classIndexVec );
 
 
@@ -32,6 +37,7 @@ private:
     unsigned int numInstances   = 0;
     unsigned int numFeaturesOut = 0;
     unsigned int numFeaturesIn  = 0;
+    unsigned int numNodes       = 0;
     unsigned int layerType      = 0;
     float* weightMat            = nullptr;
     float* outputMat            = nullptr;

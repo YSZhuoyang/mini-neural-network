@@ -28,7 +28,9 @@ private:
     void activate(
         const float* featureMat,
         const unsigned short* classIndexVec );
-    void backProp();
+    void backProp(
+        const float* featureMat,
+        const float learningRate );
 
     // Does not include input layer
     unsigned short numLayers       = 0;
