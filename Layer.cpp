@@ -64,13 +64,13 @@ float* Layer::forwardOutput( const float* inputMat )
         // cublasHandle,
         // CUBLAS_OP_N, // cublasOperation_t transa,
         // CUBLAS_OP_N, // cublasOperation_t transb,
-        // numInstances, numNodes, numFeaturesIn //int m, int n, int k,
-        // const float           *alpha,
-        // const float           *A, int lda,
-        // const float           *B, int ldb,
-        // const float           *beta,
-        // float           *C,
-        // int ldc ) );
+        // numInstances, numNodes, numFeaturesIn, //int m, int n, int k,
+        // 1.0f, //const float           *alpha,
+        // numInstances, //const float           *A, int lda,
+        // numFeaturesIn, //const float           *B, int ldb,
+        // 0.0f, //const float           *beta,
+        // dOutputMatOffset, //float           *C,
+        // numInstances //int ldc ) );
 
     // Include bias in non-output layer
     for (unsigned int i = 0; i < numInstances; i++)
