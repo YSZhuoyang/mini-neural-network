@@ -42,6 +42,15 @@ void Layer::init(
     outputMat = (float*) malloc( numInstances * numFeaturesOut * sizeof( float ) );
     errorMat = (float*) malloc( numInstances * numNodes * sizeof( float ) );
 
+    // Setup bias in non-output layer
+    if (layerType == HIDDEN_LAYER)
+    {
+        outputOffset = 1;
+        // Fill the first feature with X0 for bias
+        for (unsigned int i = 0; i < numInstances; i++)
+            outputMat[i * numFeaturesOut] = 1;
+    }
+
     // Inie weight matrix
     for (unsigned int i = 0; i < numNodes; i++)
         for (unsigned int j = 0; j < numFeaturesIn; j++)
@@ -51,14 +60,19 @@ void Layer::init(
 
 float* Layer::forwardOutput( const float* inputMat )
 {
-    // Include bias in non-output layer
-    unsigned int offset = 1;
-    if (layerType == OUTPUT_LAYER) offset = 0;
-    else
-        // Fill the first feature with X0 for bias
-        for (unsigned int i = 0; i < numInstances; i++)
-            outputMat[i * numFeaturesOut] = 1;
+    // cublasCheckError( cublasSgemm(
+        // cublasHandle,
+        // CUBLAS_OP_N, // cublasOperation_t transa,
+        // CUBLAS_OP_N, // cublasOperation_t transb,
+        // numInstances, numNodes, numFeaturesIn //int m, int n, int k,
+        // const float           *alpha,
+        // const float           *A, int lda,
+        // const float           *B, int ldb,
+        // const float           *beta,
+        // float           *C,
+        // int ldc ) );
 
+    // Include bias in non-output layer
     for (unsigned int i = 0; i < numInstances; i++)
         for (unsigned int idNode = 0; idNode < numNodes; idNode++)
         {
@@ -67,7 +81,7 @@ float* Layer::forwardOutput( const float* inputMat )
                 sum += weightMat[idNode * numFeaturesIn + idIn] *
                     inputMat[i * numFeaturesIn + idIn];
             sum = 1.0f / (1.0f + expf(-sum));
-            outputMat[numFeaturesOut * i + idNode + offset] = sum;
+            outputMat[numFeaturesOut * i + idNode + outputOffset] = sum;
         }
 
     return outputMat;
@@ -153,6 +167,37 @@ void Layer::computeOutputLayerError( const unsigned short* classIndexVec )
             // costSum += fabs(errorMat[i * numNodes + j]);
 
     printf( "Cost: %f\n", costSum );
+}
+
+inline void Layer::cublasErrorCheck( cublasStatus_t cublasStatus )
+{
+    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
+    {
+        printf( "CuBLAS launch failed with error\n" );
+        switch (cublasStatus)
+        {
+            case CUBLAS_STATUS_NOT_INITIALIZED:
+                printf( "CUBLAS_STATUS_NOT_INITIALIZED\n" );
+
+            case CUBLAS_STATUS_ALLOC_FAILED:
+                printf( "CUBLAS_STATUS_ALLOC_FAILED\n" );
+
+            case CUBLAS_STATUS_INVALID_VALUE:
+                printf( "CUBLAS_STATUS_INVALID_VALUE\n" );
+
+            case CUBLAS_STATUS_ARCH_MISMATCH:
+                printf( "CUBLAS_STATUS_ARCH_MISMATCH\n" );
+
+            case CUBLAS_STATUS_MAPPING_ERROR:
+                printf( "CUBLAS_STATUS_MAPPING_ERROR\n" );
+
+            case CUBLAS_STATUS_EXECUTION_FAILED:
+                printf( "CUBLAS_STATUS_EXECUTION_FAILED\n" );
+
+            case CUBLAS_STATUS_INTERNAL_ERROR:
+                printf( "CUBLAS_STATUS_INTERNAL_ERROR\n" );
+        }
+    }
 }
 
 float* Layer::getWeightPtr()

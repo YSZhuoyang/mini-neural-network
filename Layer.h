@@ -2,6 +2,7 @@
 #define _LAYER_H_
 
 #include <cstring>
+#include "cublas_v2.h"
 #include "Helper.h"
 
 
@@ -34,10 +35,13 @@ public:
 
 
 private:
+    inline void cublasErrorCheck( cublasStatus_t cublasStatus );
+
     unsigned int numInstances   = 0;
     unsigned int numFeaturesOut = 0;
     unsigned int numFeaturesIn  = 0;
     unsigned int numNodes       = 0;
+    unsigned int outputOffset   = 0;
     unsigned int layerType      = 0;
     float* weightMat            = nullptr;
     float* outputMat            = nullptr;

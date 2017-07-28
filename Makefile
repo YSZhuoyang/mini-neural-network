@@ -31,10 +31,10 @@ Layer.o: Layer.cpp Layer.h BasicDataStructures.h Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c Layer.cpp
 
 NeuralNetwork.o: NeuralNetwork.cpp NeuralNetwork.h BasicDataStructures.h Layer.o Helper.o
-	$(CC) ${CFLAGS} -c NeuralNetwork.cpp
+	$(NVCC) ${NVCCCFLAGS} -c NeuralNetwork.cpp
 
 Main.o: Main.cpp NeuralNetwork.o Layer.o Helper.o
-	$(CC) ${CFLAGS} -c Main.cpp
+	$(NVCC) ${NVCCCFLAGS} -c Main.cpp
 
 # Compile with GCC
 # exec: ${OBJECTS}
