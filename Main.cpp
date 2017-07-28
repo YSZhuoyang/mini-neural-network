@@ -6,12 +6,12 @@
 int main()
 {
     ArffImporter trainSetImporter;
-    trainSetImporter.Read( "Dataset/train/train-first1000.arff" );
+    trainSetImporter.Read( "Dataset/train/train-first50.arff" );
 
     // ArffImporter testSetImporter;
     // testSetImporter.Read( "Dataset/test/dev-first1000.arff" );
 
-    const unsigned int architecture[4] = { 1001, 41, 11, 1 };
+    const unsigned int architecture[4] = { 51, 41, 11, 1 };
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         trainSetImporter.GetNumInstances(),
@@ -20,8 +20,8 @@ int main()
     neuralNetwork.train(
         trainSetImporter.GetFeatureMat(),
         trainSetImporter.GetClassIndex(),
-        40,
-        1.0f,
+        50,
+        0.1f,
         1.0f );
     // neuralNetwork.Classify(
     //     testSetImporter.GetInstances(),
