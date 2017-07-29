@@ -11,14 +11,20 @@ int main()
     // ArffImporter testSetImporter;
     // testSetImporter.Read( "Dataset/test/dev-first1000.arff" );
 
-    const unsigned int architecture[4] = { 51, 41, 11, 1 };
+    // Init CuBLAS
+    cublasHandle_t cublasHandle;
+    cublasErrorCheck( cublasCreate( &cublasHandle ) );
+
+    const unsigned int architecture[4] = { 51, 1 };//, 41, 11
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         trainSetImporter.GetNumInstances(),
-        3,
-        architecture );
+        trainSetImporter.GetNumFeatures(),
+        1,//3,
+        architecture,
+        cublasHandle );
     neuralNetwork.train(
-        trainSetImporter.GetFeatureMat(),
+        trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndex(),
         50,
         0.1f,

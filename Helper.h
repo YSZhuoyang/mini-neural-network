@@ -3,6 +3,8 @@
 #define _HELPER_H_
 
 #include "BasicDataStructures.h"
+#include <cuda_runtime.h>
+#include "cublas_v2.h"
 #include <math.h>
 #include <algorithm>
 #include <vector>
@@ -22,17 +24,19 @@ namespace MyHelper
     unsigned int GetStrLength( const char* str );
     bool IsLetter( const char c );
     Instance Tokenize(
-        const char* str, 
+        const char* str,
         const std::vector<NumericAttr>& featureVec );
 
     unsigned int getIndexOfMax(
-        const unsigned int* uintArray, 
+        const unsigned int* uintArray,
         const unsigned int length );
     // Consume a sorted array, remove duplicates in place, 
     // and return the number of unique elements.
     unsigned int removeDuplicates(
         float* sortedArr,
         unsigned int length );
+    void cudaErrorCheck( cudaError_t cudaStatus );
+    void cublasErrorCheck( cublasStatus_t cublasStatus );
 }
 
 #endif

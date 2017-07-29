@@ -13,10 +13,12 @@ public:
 
     void initLayers(
         const unsigned int numInstances,
+        const unsigned int numTrainingFeatures,
         const unsigned int numLayers,
         // An array of length which equals to numLayers + 1
         // All except last count include bias
-        const unsigned int* architecture );
+        const unsigned int* architecture,
+        cublasHandle_t cublasHandle );
     void train(
         const float* featureMat,
         const unsigned short* classIndexVec,
@@ -25,17 +27,19 @@ public:
         const float costThreshold );
 
 private:
-    void forwardProp(
-        const float* featureMat,
-        const unsigned short* classIndexVec );
-    void backProp(
-        const float* featureMat,
-        const float learningRate );
+    void forwardProp();
+    void backProp( const float learningRate );
 
     // Does not include input layer
+    float* dFeatureMat             = nullptr;
+    unsigned short* dClassIndexVec = nullptr;
+    // To be deleted
+    const unsigned short* classIndexVec  = nullptr;
+    Layer* layerArr                = nullptr;
+    unsigned int numInstances      = 0;
+    unsigned int numTrainingFeas   = 0;
     unsigned short numLayers       = 0;
     unsigned short numHiddenLayers = 0;
-    Layer* layerArr                = nullptr;
 };
 
 #endif

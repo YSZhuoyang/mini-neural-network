@@ -2,13 +2,6 @@
 #include "Helper.h"
 
 
-// bool MyHelper::Compare(
-//     const MiniInstance& eleX, 
-//     const MiniInstance& eleY )
-// {
-//     return eleX.featureValue < eleY.featureValue;
-// }
-
 Instance MyHelper::Tokenize(
     const char* str, 
     const std::vector<NumericAttr>& featureVec )
@@ -116,4 +109,44 @@ unsigned int MyHelper::removeDuplicates(
     }
 
     return uniqueId;
+}
+
+void MyHelper::cudaErrorCheck( cudaError_t cudaStatus )
+{
+    if (cudaStatus != cudaSuccess)
+        printf(
+            "kernel launch failed with error \"%s\".\n",
+            cudaGetErrorString( cudaStatus )
+        );
+}
+
+void MyHelper::cublasErrorCheck( cublasStatus_t cublasStatus )
+{
+    if (cublasStatus != CUBLAS_STATUS_SUCCESS)
+    {
+        printf( "CuBLAS launch failed with error\n" );
+        switch (cublasStatus)
+        {
+            case CUBLAS_STATUS_NOT_INITIALIZED:
+                printf( "CUBLAS_STATUS_NOT_INITIALIZED\n" );
+
+            case CUBLAS_STATUS_ALLOC_FAILED:
+                printf( "CUBLAS_STATUS_ALLOC_FAILED\n" );
+
+            case CUBLAS_STATUS_INVALID_VALUE:
+                printf( "CUBLAS_STATUS_INVALID_VALUE\n" );
+
+            case CUBLAS_STATUS_ARCH_MISMATCH:
+                printf( "CUBLAS_STATUS_ARCH_MISMATCH\n" );
+
+            case CUBLAS_STATUS_MAPPING_ERROR:
+                printf( "CUBLAS_STATUS_MAPPING_ERROR\n" );
+
+            case CUBLAS_STATUS_EXECUTION_FAILED:
+                printf( "CUBLAS_STATUS_EXECUTION_FAILED\n" );
+
+            case CUBLAS_STATUS_INTERNAL_ERROR:
+                printf( "CUBLAS_STATUS_INTERNAL_ERROR\n" );
+        }
+    }
 }

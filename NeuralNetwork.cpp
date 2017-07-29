@@ -11,14 +11,22 @@ NeuralNetwork::~NeuralNetwork()
 {
     delete[] layerArr;
     layerArr = nullptr;
+
+    cudaFree( dFeatureMat );
+    cudaFree( dClassIndexVec );
+    dFeatureMat = nullptr;
+    dClassIndexVec = nullptr;
 }
 
 
 void NeuralNetwork::initLayers(
     const unsigned int numInstances,
+    const unsigned int numTrainingFeas,
     const unsigned int numLayers,
-    const unsigned int* architecture )
+    const unsigned int* architecture,
+    cublasHandle_t cublasHandle )
 {
+    this->numTrainingFeas = numTrainingFeas;
     this->numLayers = numLayers;
     numHiddenLayers = numLayers - 1;
     layerArr = new Layer[numLayers];
@@ -33,7 +41,8 @@ void NeuralNetwork::initLayers(
             numInstances,
             architecture[i],
             architecture[i + 1],
-            layerType );
+            layerType,
+            cublasHandle );
     }
 }
 
@@ -44,33 +53,45 @@ void NeuralNetwork::train(
     const float learningRate,
     const float costThreshold )
 {
+    this->classIndexVec = classIndexVec;
+    // Allocate device memo for training data
+    cudaErrorCheck( cudaMalloc( (void**) &dFeatureMat, numInstances * numTrainingFeas * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc( (void**) &dClassIndexVec, numInstances * sizeof( unsigned short ) ) );
+    cudaErrorCheck( cudaMemcpyAsync(
+        dFeatureMat,
+        featureMat,
+        numInstances * numTrainingFeas * sizeof( float ),
+        cudaMemcpyHostToDevice ) );
+    cudaErrorCheck( cudaMemcpyAsync(
+        dClassIndexVec,
+        classIndexVec,
+        numInstances * sizeof( unsigned short ),
+        cudaMemcpyHostToDevice ) );
+
     unsigned int iter = 0;
     while (iter++ < maxIter)
     {
-        forwardProp( featureMat, classIndexVec );
-        backProp( featureMat, learningRate );
+        forwardProp();
+        // backProp( learningRate );
 
         printf( "\n" );
     }
 }
 
-void NeuralNetwork::forwardProp(
-    const float* featureMat,
-    const unsigned short* classIndexVec )
+void NeuralNetwork::forwardProp()
 {
     // Forward propagation
-    const float* inputMat = featureMat;
+    const float* dInputMat = dFeatureMat;
     for (unsigned int i = 0; i < numLayers; i++)
     {
         printf( "layer: %d forward output ...\n", i );
-        inputMat = layerArr[i].forwardOutput( inputMat );
+        dInputMat = layerArr[i].forwardOutput( dInputMat );
         // printf( "output: %f\n", inputMat[0] );
     }
-    layerArr[numHiddenLayers].computeOutputLayerError( classIndexVec );
+    layerArr[numHiddenLayers].computeOutputLayerError( dClassIndexVec, classIndexVec );
 }
 
 void NeuralNetwork::backProp(
-    const float* featureMat,
     const float learningRate )
 {
     // Backword propagation
@@ -78,11 +99,11 @@ void NeuralNetwork::backProp(
     {
         printf( "layer: %d back propagate ...\n", i );
         layerArr[i].backPropError(
-            layerArr[i - 1].getErrorPtr(),
-            layerArr[i - 1].getOutputPtr() );
+            layerArr[i - 1].getDErrorPtr(),
+            layerArr[i - 1].getDOutputPtr() );
         printf( "layer: %d update weights ...\n", i );
         layerArr[i].updateWeights(
-            layerArr[i - 1].getOutputPtr(),
+            layerArr[i - 1].getDOutputPtr(),
             learningRate );
         // printf( "Weight: %f\n", layerArr[i].getWeightPtr()[0] );
 
@@ -95,7 +116,7 @@ void NeuralNetwork::backProp(
 
     printf( "layer: 0 update weights ...\n" );
     layerArr[0].updateWeights(
-        featureMat,
+        dFeatureMat,
         learningRate );
     // printf( "Weight: %f\n", layerArr[0].getWeightPtr()[0] );
 
