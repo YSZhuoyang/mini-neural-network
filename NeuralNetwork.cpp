@@ -21,13 +21,13 @@ NeuralNetwork::~NeuralNetwork()
 
 void NeuralNetwork::initLayers(
     const unsigned int numInstances,
-    const unsigned int numTrainingFeas,
     const unsigned int numLayers,
     const unsigned int* architecture,
     cublasHandle_t cublasHandle )
 {
-    this->numTrainingFeas = numTrainingFeas;
+    this->architecture = architecture;
     this->numLayers = numLayers;
+    this->numInstances = numInstances;
     numHiddenLayers = numLayers - 1;
     layerArr = new Layer[numLayers];
 
@@ -54,6 +54,7 @@ void NeuralNetwork::train(
     const float costThreshold )
 {
     this->classIndexVec = classIndexVec;
+    const unsigned int numTrainingFeas = architecture[0];
     // Allocate device memo for training data
     cudaErrorCheck( cudaMalloc( (void**) &dFeatureMat, numInstances * numTrainingFeas * sizeof( float ) ) );
     cudaErrorCheck( cudaMalloc( (void**) &dClassIndexVec, numInstances * sizeof( unsigned short ) ) );

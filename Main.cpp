@@ -19,14 +19,13 @@ int main()
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         trainSetImporter.GetNumInstances(),
-        trainSetImporter.GetNumFeatures(),
         1,//3,
         architecture,
         cublasHandle );
     neuralNetwork.train(
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndex(),
-        50,
+        1,
         0.1f,
         1.0f );
     // neuralNetwork.Classify(

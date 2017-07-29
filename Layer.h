@@ -37,8 +37,8 @@ public:
         const float* inputMat,
         const float learningRate );
     void computeOutputLayerError(
-        const unsigned short* __restrict__ dClassIndexVec,
-        const unsigned short* __restrict__ classIndexVec );
+        const unsigned short* dClassIndexVec,
+        const unsigned short* classIndexVec );
 
 
 private:

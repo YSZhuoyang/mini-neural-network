@@ -13,7 +13,6 @@ public:
 
     void initLayers(
         const unsigned int numInstances,
-        const unsigned int numTrainingFeatures,
         const unsigned int numLayers,
         // An array of length which equals to numLayers + 1
         // All except last count include bias
@@ -34,10 +33,10 @@ private:
     float* dFeatureMat             = nullptr;
     unsigned short* dClassIndexVec = nullptr;
     // To be deleted
-    const unsigned short* classIndexVec  = nullptr;
+    const unsigned short* classIndexVec = nullptr;
+    const unsigned int* architecture = nullptr;
     Layer* layerArr                = nullptr;
     unsigned int numInstances      = 0;
-    unsigned int numTrainingFeas   = 0;
     unsigned short numLayers       = 0;
     unsigned short numHiddenLayers = 0;
 };

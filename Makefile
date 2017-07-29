@@ -17,7 +17,6 @@ OBJECTS = Helper.o ArffImporter.o Layer.o NeuralNetwork.o Main.o
 
 ################################ Compile ################################
 
-# Compile with NVCC
 gpu_exec: ${OBJECTS}
 	$(NVCC) ${NVCCCFLAGS} -o $@ ${OBJECTS}
 

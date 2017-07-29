@@ -25,7 +25,8 @@ __global__ void ComputeOutputLayerError(
 
     float output = dOutputMat[instanceId];
     output = 1.0f / (1.0f + expf(-output));
-    // dOutputMat[instanceId] = output;
+    // For testing
+    dOutputMat[instanceId] = output;
     dErrorMat[instanceId] = output - (float) dClassIndexVec[instanceId];
 }
 
@@ -126,11 +127,6 @@ void Layer::init(
         outputMat,
         numInstances * sizeof( float ),
         cudaMemcpyHostToDevice ) );
-    cudaErrorCheck( cudaMemcpyAsync(
-        dErrorMat,
-        errorMat,
-        numInstances * numNodes * sizeof( float ),
-        cudaMemcpyHostToDevice ) );
 
     dOutputMatOffset = (layerType != HIDDEN_LAYER) ? dOutputMat : dOutputMat + numInstances;
 }
@@ -143,39 +139,25 @@ float* Layer::forwardOutput( const float* dInputMat )
     const float alpha = 1.0f;
     const float beta = 0.0f;
 
-    printf( "test\n" );
-
-    // cublasErrorCheck( cublasSgemm(
-    //     cublasHandle,
-    //     CUBLAS_OP_N, // cublasOperation_t transa,
-    //     CUBLAS_OP_N, // cublasOperation_t transb,
-    //     numInstances, numNodes, numFeaturesIn, //int m, int n, int k,
-    //     &alpha,        //const float           *alpha,
-    //     dInputMat, numInstances, //const float           *A, int lda,
-    //     dWeightMat, numFeaturesIn, //const float           *B, int ldb,
-    //     &beta,        //const float           *beta,
-    //     dOutputMatOffset, //float           *C,
-    //     numInstances ) ); //int ldc ) );
+    cublasErrorCheck( cublasSgemm(
+        cublasHandle,
+        CUBLAS_OP_N, // cublasOperation_t transa,
+        CUBLAS_OP_N, // cublasOperation_t transb,
+        numInstances, numNodes, numFeaturesIn, //int m, int n, int k,
+        &alpha,        //const float           *alpha,
+        dInputMat, numInstances, //const float           *A, int lda,
+        dWeightMat, numFeaturesIn, //const float           *B, int ldb,
+        &beta,        //const float           *beta,
+        dOutputMatOffset, //float           *C,
+        numInstances ) ); //int ldc ) );
     Sigmid<<< sigGridDim, sigBlockDim >>>(
         dOutputMatOffset,
         numInstances * numNodes );
     cudaErrorCheck( cudaGetLastError() );
 
+    printf( "test 2\n" );
+
     return dOutputMat;
-
-    // Include bias in non-output layer
-    // for (unsigned int i = 0; i < numInstances; i++)
-    //     for (unsigned int idNode = 0; idNode < numNodes; idNode++)
-    //     {
-    //         float sum = 0.0f;
-    //         for (unsigned int idIn = 0; idIn < numFeaturesIn; idIn++)
-    //             sum += weightMat[idNode * numFeaturesIn + idIn] *
-    //                 inputMat[i * numFeaturesIn + idIn];
-    //         sum = 1.0f / (1.0f + expf(-sum));
-    //         outputMat[numFeaturesOut * i + idNode + outputOffset] = sum;
-    //     }
-
-    // return outputMat;
 }
 
 void Layer::backPropError(
@@ -196,14 +178,6 @@ void Layer::backPropError(
                 sum * inputMat[numFeaturesIn * i + idIn + offset] *
                 (1.0f - inputMat[numFeaturesIn * i + idIn + offset]);
         }
-
-    // float sum = 0.0f;
-    // for (int i = 0; i < numNodesPreLayer; i++)
-    //     for (int j = 0; j < numInstances; j++)
-    //         sum += fabs(preLayerErrorMat[j * numNodes + i]);
-    // printf( "Pre Error sum: %f\n", sum );
-
-    // printf( "error in: %f\n", preLayerErrorMat[0] );
 }
 
 void Layer::updateWeights(
@@ -221,18 +195,12 @@ void Layer::updateWeights(
                 learningRate / (float) numInstances * sum;
         }
 
-    // float sum = 0.0f;
-    // for (int i = 0; i < numNodes; i++)
-    //     for (int j = 0; j < numFeaturesIn; j++)
-    //         sum += weightMat[i * numFeaturesIn + j];
-    // printf( "Weight sum: %f\n", sum );
-
     printf( "Back propagate completed, weight: %f\n", weightMat[0] );
 }
 
 void Layer::computeOutputLayerError(
-    const unsigned short* __restrict__ dClassIndexVec,
-    const unsigned short* __restrict__ classIndexVec )
+    const unsigned short* dClassIndexVec,
+    const unsigned short* classIndexVec )
 {
     if (layerType != OUTPUT_LAYER)
     {
@@ -245,6 +213,9 @@ void Layer::computeOutputLayerError(
         dOutputMat,
         dClassIndexVec,
         numInstances );
+    cudaErrorCheck( cudaGetLastError() );
+
+    printf( "test 3\n" );
 
     // 2 classes
     // if (numFeaturesOut == 1)
@@ -259,10 +230,11 @@ void Layer::computeOutputLayerError(
     // }
 
     // Copy from device to host
-    cudaErrorCheck( cudaMemcpyAsync(
-        errorMat,
-        dErrorMat,
-        numInstances * numNodes * sizeof( float ),
+    // For testing gradient descent
+    cudaErrorCheck( cudaMemcpy(
+        outputMat,
+        dOutputMat,
+        numInstances * sizeof( float ),
         cudaMemcpyDeviceToHost ) );
 
     float costSum = 0.0f;
@@ -270,7 +242,6 @@ void Layer::computeOutputLayerError(
         for (unsigned int j = 0; j < numNodes; j++)
             costSum -= (classIndexVec[i]) ?
                 logf(outputMat[i * numNodes + j]) : logf(1.0f - outputMat[i * numNodes + j]);
-            // costSum += fabs(errorMat[i * numNodes + j]);
 
     printf( "Cost: %f\n", costSum );
 }
