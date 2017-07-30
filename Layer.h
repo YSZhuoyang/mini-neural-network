@@ -47,6 +47,10 @@ private:
     unsigned int numFeaturesIn  = 0;
     unsigned int numNodes       = 0;
     unsigned int outputOffset   = 0;
+    unsigned int weightMatSize  = 0;
+    unsigned int errorMatSize   = 0;
+    unsigned int outputMatSize  = 0;
+    unsigned int inputMatSize   = 0;
     unsigned int layerType      = 0;
     // Host data
     float* weightMat            = nullptr;

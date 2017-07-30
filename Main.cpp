@@ -15,11 +15,13 @@ int main()
     cublasHandle_t cublasHandle;
     cublasErrorCheck( cublasCreate( &cublasHandle ) );
 
-    const unsigned int architecture[4] = { 51, 1 };//, 41, 11
+    unsigned int architecture[2];
+    architecture[0] = trainSetImporter.GetNumFeatures();
+    architecture[1] = 1;
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         trainSetImporter.GetNumInstances(),
-        1,//3,
+        1,
         architecture,
         cublasHandle );
     neuralNetwork.train(
@@ -35,6 +37,9 @@ int main()
     //     "This is bad",
     //     trainSetImporter.GetFeatures(),
     //     trainSetImporter.GetClassAttr() );
+
+    // Release CuBLAS context resources
+    cublasErrorCheck( cublasDestroy( cublasHandle ) );
 
     return 0;
 }

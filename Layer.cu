@@ -18,16 +18,15 @@ __global__ void ComputeOutputLayerError(
     float* __restrict__ dErrorMat,
     float* __restrict__ dOutputMat,
     const unsigned short* __restrict__ dClassIndexVec,
-    const unsigned int numInstances )
+    const unsigned int errorMatSize )
 {
-    unsigned int instanceId = blockDim.x * blockIdx.x + threadIdx.x;
-    if (instanceId >= numInstances) return;
+    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    if (eleId >= errorMatSize) return;
 
-    float output = dOutputMat[instanceId];
-    output = 1.0f / (1.0f + expf(-output));
+    float output = dOutputMat[eleId];
     // For testing
-    dOutputMat[instanceId] = output;
-    dErrorMat[instanceId] = output - (float) dClassIndexVec[instanceId];
+    dOutputMat[eleId] = output;
+    dErrorMat[eleId] = output - (float) dClassIndexVec[eleId];
 }
 
 
@@ -74,11 +73,15 @@ void Layer::init(
     this->layerType = layerType;
     numNodes = (layerType == OUTPUT_LAYER) ?
         numFeaturesOut : numFeaturesOut - 1;
+    weightMatSize = numFeaturesIn * numNodes;
+    errorMatSize = numInstances * numNodes;
+    outputMatSize = numInstances * numFeaturesOut;
+    inputMatSize = numInstances * numFeaturesIn;
 
     // Allocate host memo
-    weightMat = (float*) malloc( numFeaturesIn * numNodes * sizeof( float ) );
-    outputMat = (float*) malloc( numInstances * numFeaturesOut * sizeof( float ) );
-    errorMat = (float*) malloc( numInstances * numNodes * sizeof( float ) );
+    weightMat = (float*) malloc( weightMatSize * sizeof( float ) );
+    outputMat = (float*) malloc( outputMatSize * sizeof( float ) );
+    errorMat = (float*) malloc( errorMatSize * sizeof( float ) );
 
     // Setup bias in non-output layer
     if (layerType == HIDDEN_LAYER)
@@ -87,24 +90,22 @@ void Layer::init(
         // Fill the first feature with X0 for bias
         for (unsigned int i = 0; i < numInstances; i++)
             outputMat[i] = 1;
-            // outputMat[i * numFeaturesOut] = 1;
     }
 
     // Inie weight matrix
     for (unsigned int i = 0; i < numNodes; i++)
         for (unsigned int j = 0; j < numFeaturesIn; j++)
-            weightMat[i * numFeaturesIn + j] = 1.0f;
-                // 0.1f * (float) ((i * numFeaturesIn + j) % 10);
+            // To be randomized
+            weightMat[i * numFeaturesIn + j] = 0.0f;
 
     /* Determine block and grid size of ComputeCost kernel */
-    if (numInstances > 128)
+    if (outputMatSize > 128)
     {
         ccBlockDim.x = 128;
-        ccGridDim.x = (numInstances + 127) / 128;
+        ccGridDim.x = (outputMatSize + 127) / 128;
     }
-    else ccBlockDim.x = numInstances;
+    else ccBlockDim.x = outputMatSize;
 
-    unsigned int errorMatSize = numInstances * numNodes;
     if (errorMatSize > 128)
     {
         sigBlockDim.x = 128;
@@ -113,15 +114,15 @@ void Layer::init(
     else sigBlockDim.x = errorMatSize;
 
     // Allocate device memo
-    cudaErrorCheck( cudaMalloc( (void**) &dWeightMat, numFeaturesIn * numNodes * sizeof( float ) ) );
-    cudaErrorCheck( cudaMalloc( (void**) &dOutputMat, numInstances * numFeaturesOut * sizeof( float ) ) );
-    cudaErrorCheck( cudaMalloc( (void**) &dErrorMat, numInstances * numNodes * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc( (void**) &dWeightMat, weightMatSize * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc( (void**) &dOutputMat, outputMatSize * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc( (void**) &dErrorMat, errorMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMemcpyAsync(
         dWeightMat,
         weightMat,
-        numFeaturesIn * numNodes * sizeof( float ),
+        weightMatSize * sizeof( float ),
         cudaMemcpyHostToDevice ) );
-    // Fill in with bias
+    // Fill in with X0 as bias
     cudaErrorCheck( cudaMemcpyAsync(
         dOutputMat,
         outputMat,
@@ -141,21 +142,23 @@ float* Layer::forwardOutput( const float* dInputMat )
 
     cublasErrorCheck( cublasSgemm(
         cublasHandle,
-        CUBLAS_OP_N, // cublasOperation_t transa,
-        CUBLAS_OP_N, // cublasOperation_t transb,
-        numInstances, numNodes, numFeaturesIn, //int m, int n, int k,
-        &alpha,        //const float           *alpha,
-        dInputMat, numInstances, //const float           *A, int lda,
-        dWeightMat, numFeaturesIn, //const float           *B, int ldb,
-        &beta,        //const float           *beta,
-        dOutputMatOffset, //float           *C,
-        numInstances ) ); //int ldc ) );
+        CUBLAS_OP_N,
+        CUBLAS_OP_N,
+        numInstances,
+        numNodes,
+        numFeaturesIn,
+        &alpha,
+        dInputMat,
+        numInstances,
+        dWeightMat,
+        numFeaturesIn,
+        &beta,
+        dOutputMatOffset,
+        numInstances ) );
     Sigmid<<< sigGridDim, sigBlockDim >>>(
         dOutputMatOffset,
         numInstances * numNodes );
     cudaErrorCheck( cudaGetLastError() );
-
-    printf( "test 2\n" );
 
     return dOutputMat;
 }
@@ -212,29 +215,15 @@ void Layer::computeOutputLayerError(
         dErrorMat,
         dOutputMat,
         dClassIndexVec,
-        numInstances );
+        numInstances * numNodes );
     cudaErrorCheck( cudaGetLastError() );
-
-    printf( "test 3\n" );
-
-    // 2 classes
-    // if (numFeaturesOut == 1)
-    //     for (unsigned int i = 0; i < numInstances; i++)
-    //         errorMat[i] = outputMat[i] - (float) classIndexVec[i];
-    // More than 2 classes
-    // else
-    // {
-    //     memmove( errorMat, outputMat, numInstances * numNodes * sizeof( float ) );
-    //     for (unsigned int i = 0; i < numInstances; i++)
-    //         errorMat[i * numNodes + classIndexVec[i]] -= 1.0f;
-    // }
 
     // Copy from device to host
     // For testing gradient descent
     cudaErrorCheck( cudaMemcpy(
         outputMat,
         dOutputMat,
-        numInstances * sizeof( float ),
+        outputMatSize * sizeof( float ),
         cudaMemcpyDeviceToHost ) );
 
     float costSum = 0.0f;
