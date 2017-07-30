@@ -73,7 +73,7 @@ void NeuralNetwork::train(
     while (iter++ < maxIter)
     {
         forwardProp();
-        // backProp( learningRate );
+        backProp( learningRate );
 
         printf( "\n" );
     }
@@ -101,11 +101,13 @@ void NeuralNetwork::backProp(
         printf( "layer: %d back propagate ...\n", i );
         layerArr[i].backPropError(
             layerArr[i - 1].getDErrorPtr(),
-            layerArr[i - 1].getDOutputPtr() );
-        printf( "layer: %d update weights ...\n", i );
-        layerArr[i].updateWeights(
             layerArr[i - 1].getDOutputPtr(),
-            learningRate );
+            layerArr[i - 1].getSigGridDim(),
+            layerArr[i - 1].getSigBlockDim() );
+        // printf( "layer: %d update weights ...\n", i );
+        // layerArr[i].updateWeights(
+        //     layerArr[i - 1].getDOutputPtr(),
+        //     learningRate );
         // printf( "Weight: %f\n", layerArr[i].getWeightPtr()[0] );
 
         // float sum = 0.0f;
@@ -115,10 +117,10 @@ void NeuralNetwork::backProp(
         // printf( "Weight sum: %f\n", sum );
     }
 
-    printf( "layer: 0 update weights ...\n" );
-    layerArr[0].updateWeights(
-        dFeatureMat,
-        learningRate );
+    // printf( "layer: 0 update weights ...\n" );
+    // layerArr[0].updateWeights(
+    //     dFeatureMat,
+    //     learningRate );
     // printf( "Weight: %f\n", layerArr[0].getWeightPtr()[0] );
 
     // float sum = 0.0f;

@@ -29,6 +29,18 @@ __global__ void ComputeOutputLayerError(
     dErrorMat[eleId] = output - (float) dClassIndexVec[eleId];
 }
 
+__global__ void BackPropError(
+    float* __restrict__ dPreLayerErrorMat,
+    const float* __restrict__ dInputMatOffset,
+    const unsigned int preErrorMatSize )
+{
+    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    if (eleId >= preErrorMatSize) return;
+
+    float preError = dInputMatOffset[eleId] * (1.0f - dInputMatOffset[eleId]);
+    dPreLayerErrorMat[eleId] *= preError;
+}
+
 
 Layer::Layer()
 {
@@ -41,9 +53,11 @@ Layer::~Layer()
     free( outputMat );
     free( errorMat );
     cudaFree( dWeightMat );
+    cudaFree( dWeightMatTrans );
     cudaFree( dOutputMat );
     cudaFree( dErrorMat );
     weightMat = nullptr;
+    dWeightMatTrans = nullptr;
     outputMat = nullptr;
     errorMat = nullptr;
     dWeightMat = nullptr;
@@ -96,7 +110,7 @@ void Layer::init(
     for (unsigned int i = 0; i < numNodes; i++)
         for (unsigned int j = 0; j < numFeaturesIn; j++)
             // To be randomized
-            weightMat[i * numFeaturesIn + j] = 0.0f;
+            weightMat[i * numFeaturesIn + j] = 1.0f;
 
     /* Determine block and grid size of kernel functions */
     if (outputMatSize > 128)
@@ -113,8 +127,17 @@ void Layer::init(
     }
     else sigBlockDim.x = errorMatSize;
 
+    // unsigned int preErrorMatSize = (numFeaturesIn - 1) * numInstances;
+    // if (preErrorMatSize > 128)
+    // {
+    //     bpeBlockDim.x = 128;
+    //     bpeGridDim.x = (preErrorMatSize + 127) / 128;
+    // }
+    // else bpeBlockDim.x = preErrorMatSize;
+
     // Allocate device memo
     cudaErrorCheck( cudaMalloc( (void**) &dWeightMat, weightMatSize * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc( (void**) &dWeightMatTrans, weightMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMalloc( (void**) &dOutputMat, outputMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMalloc( (void**) &dErrorMat, errorMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMemcpyAsync(
@@ -165,14 +188,30 @@ float* Layer::forwardOutput( const float* dInputMat )
 }
 
 void Layer::backPropError(
-    float* preLayerErrorMat,
-    const float* inputMat )
+    float* dPreLayerErrorMat,
+    const float* dInputMat,
+    dim3 bpeGridDim,
+    dim3 bpeBlockDim )
 {
     unsigned int numNodesPreLayer = numFeaturesIn - 1;
 
-    // const float alpha = 1.0f;
-    // const float beta = 0.0f;
+    const float alpha = 1.0f;
+    const float beta = 0.0f;
 
+    // cublasErrorCheck( cublasSgeam(
+    //     cublasHandle,
+    //     CUBLAS_OP_T,
+    //     CUBLAS_OP_N,
+    //     numFeaturesOut,
+    //     numFeaturesIn,
+    //     &alpha,
+    //     dWeightMat,
+    //     numFeaturesIn,
+    //     &beta,
+    //     nullptr,
+    //     numFeaturesOut,
+    //     dWeightMatTrans,
+    //     numFeaturesOut ) );
     // cublasErrorCheck( cublasSgemm(
     //     cublasHandle,
     //     CUBLAS_OP_N,
@@ -181,30 +220,69 @@ void Layer::backPropError(
     //     numInstances,
     //     numFeaturesOut,
     //     &alpha,
-    //     dInputMat,
+    //     dErrorMat,
     //     numInstances,
     //     // Exclude bias
-    //     dWeightMat + 1,
-    //     numFeaturesIn,
+    //     dWeightMatTrans + numFeaturesOut,
+    //     numFeaturesOut,
     //     &beta,
-    //     preLayerErrorMat,
+    //     dPreLayerErrorMat,
     //     numInstances ) );
+    cublasErrorCheck( cublasSgemm(
+        cublasHandle,
+        CUBLAS_OP_N,
+        CUBLAS_OP_T,
+        numInstances,
+        numNodesPreLayer,
+        numFeaturesOut,
+        &alpha,
+        dErrorMat,
+        numInstances,
+        // Exclude bias
+        dWeightMat + 1,
+        numFeaturesIn,
+        &beta,
+        dPreLayerErrorMat,
+        numInstances ) );
+    BackPropError<<< bpeGridDim, bpeBlockDim >>>(
+        dPreLayerErrorMat,
+        dInputMat + numInstances,
+        numNodesPreLayer * numInstances );
+    cudaErrorCheck( cudaGetLastError() );
 
-    // preLayerErrorMat ele wise dot inputMat ele wise dot (1 - inputMat) ...
+    cudaErrorCheck( cudaThreadSynchronize() );
+
+    // Copy from device to host
+    // For testing gradient descent
+    float* preLayerErrorMat = (float*) malloc( numNodesPreLayer * numInstances * sizeof( float ) );
+    cudaErrorCheck( cudaMemcpy(
+        preLayerErrorMat,
+        dPreLayerErrorMat,
+        numNodesPreLayer * numInstances * sizeof( float ),
+        cudaMemcpyDeviceToHost ) );
+
+    float sum = 0.0f;
+    for (unsigned int i = 0; i < numInstances; i++)
+        for (unsigned int j = 0; j < numNodesPreLayer; j++)
+            sum += preLayerErrorMat[i * numNodesPreLayer + j];
+
+    printf( "Err pre: %f\n", sum );
+    free( preLayerErrorMat );
+
 
     // Ignore bias input
-    unsigned int offset = 1;
-    for (unsigned int i = 0; i < numInstances; i++)
-        for (unsigned int idIn = 0; idIn < numNodesPreLayer; idIn++)
-        {
-            float sum = 0.0f;
-            for (unsigned int idNode = 0; idNode < numNodes; idNode++)
-                sum += weightMat[idNode * numFeaturesIn + idIn + offset] *
-                    errorMat[numNodes * i + idNode];
-            preLayerErrorMat[numNodesPreLayer * i + idIn] =
-                sum * inputMat[numFeaturesIn * i + idIn + offset] *
-                (1.0f - inputMat[numFeaturesIn * i + idIn + offset]);
-        }
+    // unsigned int offset = 1;
+    // for (unsigned int i = 0; i < numInstances; i++)
+    //     for (unsigned int idIn = 0; idIn < numNodesPreLayer; idIn++)
+    //     {
+    //         float sum = 0.0f;
+    //         for (unsigned int idNode = 0; idNode < numNodes; idNode++)
+    //             sum += weightMat[idNode * numFeaturesIn + idIn + offset] *
+    //                 errorMat[numNodes * i + idNode];
+    //         preLayerErrorMat[numNodesPreLayer * i + idIn] =
+    //             sum * inputMat[numFeaturesIn * i + idIn + offset] *
+    //             (1.0f - inputMat[numFeaturesIn * i + idIn + offset]);
+    //     }
 }
 
 void Layer::updateWeights(
@@ -287,4 +365,14 @@ float* Layer::getOutputPtr()
 float* Layer::getErrorPtr()
 {
     return errorMat;
+}
+
+dim3 Layer::getSigGridDim()
+{
+    return sigGridDim;
+}
+
+dim3 Layer::getSigBlockDim()
+{
+    return sigBlockDim;
 }

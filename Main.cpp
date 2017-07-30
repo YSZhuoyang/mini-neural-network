@@ -15,13 +15,15 @@ int main()
     cublasHandle_t cublasHandle;
     cublasErrorCheck( cublasCreate( &cublasHandle ) );
 
-    unsigned int architecture[2];
+    const unsigned int numLayers = 2;
+    unsigned int architecture[numLayers + 1];
     architecture[0] = trainSetImporter.GetNumFeatures();
-    architecture[1] = 1;
+    architecture[1] = 11;
+    architecture[2] = 1;
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         trainSetImporter.GetNumInstances(),
-        1,
+        numLayers,
         architecture,
         cublasHandle );
     neuralNetwork.train(

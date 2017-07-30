@@ -24,24 +24,40 @@ public:
         const unsigned short layerType,
         cublasHandle_t cublasHandle );
     float* forwardOutput( const float* dInputMat );
-    float* getOutputPtr();
-    float* getErrorPtr();
-    float* getWeightPtr();
-    float* getDWeightPtr();
-    float* getDOutputPtr();
-    float* getDErrorPtr();
     void backPropError(
         float* preLayerErrorMat,
-        const float* inputMat );
+        const float* dInputMat,
+        dim3 bpeGridDim,
+        dim3 bpeBlockDim );
     void updateWeights(
         const float* inputMat,
         const float learningRate );
     void computeOutputLayerError(
         const unsigned short* dClassIndexVec,
         const unsigned short* classIndexVec );
+    float* getOutputPtr();
+    float* getErrorPtr();
+    float* getWeightPtr();
+    float* getDWeightPtr();
+    float* getDOutputPtr();
+    float* getDErrorPtr();
+    dim3 getSigGridDim();
+    dim3 getSigBlockDim();
 
 
 private:
+    // Host data
+    float* weightMat            = nullptr;
+    float* outputMat            = nullptr;
+    float* errorMat             = nullptr;
+    float* preLayerErrorMat     = nullptr;
+    // Device data
+    float* dWeightMat           = nullptr;
+    float* dWeightMatTrans      = nullptr;
+    float* dOutputMat           = nullptr;
+    float* dOutputMatOffset     = nullptr;
+    float* dErrorMat            = nullptr;
+    float* dPreLayerErrorMat    = nullptr;
     unsigned int numInstances   = 0;
     unsigned int numFeaturesOut = 0;
     unsigned int numFeaturesIn  = 0;
@@ -52,22 +68,13 @@ private:
     unsigned int outputMatSize  = 0;
     unsigned int inputMatSize   = 0;
     unsigned int layerType      = 0;
-    // Host data
-    float* weightMat            = nullptr;
-    float* outputMat            = nullptr;
-    float* errorMat             = nullptr;
-    float* preLayerErrorMat     = nullptr;
-    // Device data
-    float* dWeightMat           = nullptr;
-    float* dOutputMat           = nullptr;
-    float* dOutputMatOffset     = nullptr;
-    float* dErrorMat            = nullptr;
-    float* dPreLayerErrorMat    = nullptr;
     // Kernel config
     dim3 sigBlockDim;
     dim3 sigGridDim;
     dim3 ccBlockDim;
     dim3 ccGridDim;
+    // dim3 bpeBlockDim;
+    // dim3 bpeGridDim;
     cublasHandle_t cublasHandle;
 };
 
