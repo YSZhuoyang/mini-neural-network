@@ -73,8 +73,6 @@ private:
     dim3 sigGridDim;
     dim3 ccBlockDim;
     dim3 ccGridDim;
-    // dim3 bpeBlockDim;
-    // dim3 bpeGridDim;
     cublasHandle_t cublasHandle;
 };
 

@@ -27,18 +27,18 @@ public:
 
 private:
     void forwardProp();
-    void backProp( const float learningRate );
+    void backProp( const float learningParam );
 
-    // Does not include input layer
-    float* dFeatureMat             = nullptr;
-    unsigned short* dClassIndexVec = nullptr;
     // To be deleted
     const unsigned short* classIndexVec = nullptr;
+    // Does not include input layer
+    float* dFeatureMat               = nullptr;
+    unsigned short* dClassIndexVec   = nullptr;
     const unsigned int* architecture = nullptr;
-    Layer* layerArr                = nullptr;
-    unsigned int numInstances      = 0;
-    unsigned short numLayers       = 0;
-    unsigned short numHiddenLayers = 0;
+    Layer* layerArr                  = nullptr;
+    unsigned int numInstances        = 0;
+    unsigned short numLayers         = 0;
+    unsigned short numHiddenLayers   = 0;
 };
 
 #endif

@@ -106,7 +106,7 @@ void Layer::init(
             outputMat[i] = 1;
     }
 
-    // Inie weight matrix
+    // Init weight matrix
     for (unsigned int i = 0; i < numNodes; i++)
         for (unsigned int j = 0; j < numFeaturesIn; j++)
             // To be randomized
@@ -126,14 +126,6 @@ void Layer::init(
         sigGridDim.x = (errorMatSize + 127) / 128;
     }
     else sigBlockDim.x = errorMatSize;
-
-    // unsigned int preErrorMatSize = (numFeaturesIn - 1) * numInstances;
-    // if (preErrorMatSize > 128)
-    // {
-    //     bpeBlockDim.x = 128;
-    //     bpeGridDim.x = (preErrorMatSize + 127) / 128;
-    // }
-    // else bpeBlockDim.x = preErrorMatSize;
 
     // Allocate device memo
     cudaErrorCheck( cudaMalloc( (void**) &dWeightMat, weightMatSize * sizeof( float ) ) );
@@ -274,16 +266,6 @@ void Layer::updateWeights(
         dWeightMat,
         1 ) );
 
-    // for (unsigned int idNode = 0; idNode < numNodes; idNode++)
-    //     for (unsigned int idIn = 0; idIn < numFeaturesIn; idIn++)
-    //     {
-    //         float sum = 0.0f;
-    //         for (unsigned int i = 0; i < numInstances; i++)
-    //             sum += inputMat[numFeaturesIn * i + idIn] *
-    //                 errorMat[numNodes * i + idNode];
-    //         weightMat[numFeaturesIn * idNode + idIn] -=
-    //             learningRate / (float) numInstances * sum;
-    //     }
     // Copy from device to host
     // For testing gradient descent
     cudaErrorCheck( cudaMemcpy(

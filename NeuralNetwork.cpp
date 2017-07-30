@@ -69,11 +69,12 @@ void NeuralNetwork::train(
         numInstances * sizeof( unsigned short ),
         cudaMemcpyHostToDevice ) );
 
+    float learningParam = -learningRate / (float) numInstances;
     unsigned int iter = 0;
     while (iter++ < maxIter)
     {
         forwardProp();
-        backProp( learningRate );
+        backProp( learningParam );
 
         printf( "\n" );
     }
@@ -87,15 +88,13 @@ void NeuralNetwork::forwardProp()
     {
         printf( "layer: %d forward output ...\n", i );
         dInputMat = layerArr[i].forwardOutput( dInputMat );
-        // printf( "output: %f\n", inputMat[0] );
     }
     layerArr[numHiddenLayers].computeOutputLayerError( dClassIndexVec, classIndexVec );
 }
 
 void NeuralNetwork::backProp(
-    const float learningRate )
+    const float learningParam )
 {
-    float learningParam = -learningRate / (float) numInstances;
     // Backword propagation
     for (unsigned int i = numHiddenLayers; i > 0; i--)
     {
