@@ -30,8 +30,8 @@ public:
         dim3 bpeGridDim,
         dim3 bpeBlockDim );
     void updateWeights(
-        const float* inputMat,
-        const float learningRate );
+        const float* dInputMat,
+        const float learningParam );
     void computeOutputLayerError(
         const unsigned short* dClassIndexVec,
         const unsigned short* classIndexVec );
@@ -53,7 +53,7 @@ private:
     float* preLayerErrorMat     = nullptr;
     // Device data
     float* dWeightMat           = nullptr;
-    float* dWeightMatTrans      = nullptr;
+    float* dDeltaWeightMat      = nullptr;
     float* dOutputMat           = nullptr;
     float* dOutputMatOffset     = nullptr;
     float* dErrorMat            = nullptr;

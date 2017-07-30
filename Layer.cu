@@ -53,11 +53,11 @@ Layer::~Layer()
     free( outputMat );
     free( errorMat );
     cudaFree( dWeightMat );
-    cudaFree( dWeightMatTrans );
+    cudaFree( dDeltaWeightMat );
     cudaFree( dOutputMat );
     cudaFree( dErrorMat );
     weightMat = nullptr;
-    dWeightMatTrans = nullptr;
+    dDeltaWeightMat = nullptr;
     outputMat = nullptr;
     errorMat = nullptr;
     dWeightMat = nullptr;
@@ -137,7 +137,7 @@ void Layer::init(
 
     // Allocate device memo
     cudaErrorCheck( cudaMalloc( (void**) &dWeightMat, weightMatSize * sizeof( float ) ) );
-    cudaErrorCheck( cudaMalloc( (void**) &dWeightMatTrans, weightMatSize * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc( (void**) &dDeltaWeightMat, weightMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMalloc( (void**) &dOutputMat, outputMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMalloc( (void**) &dErrorMat, errorMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMemcpyAsync(
@@ -198,36 +198,9 @@ void Layer::backPropError(
     const float alpha = 1.0f;
     const float beta = 0.0f;
 
-    // cublasErrorCheck( cublasSgeam(
-    //     cublasHandle,
-    //     CUBLAS_OP_T,
-    //     CUBLAS_OP_N,
-    //     numFeaturesOut,
-    //     numFeaturesIn,
-    //     &alpha,
-    //     dWeightMat,
-    //     numFeaturesIn,
-    //     &beta,
-    //     nullptr,
-    //     numFeaturesOut,
-    //     dWeightMatTrans,
-    //     numFeaturesOut ) );
-    // cublasErrorCheck( cublasSgemm(
-    //     cublasHandle,
-    //     CUBLAS_OP_N,
-    //     CUBLAS_OP_N,
-    //     numNodesPreLayer,
-    //     numInstances,
-    //     numFeaturesOut,
-    //     &alpha,
-    //     dErrorMat,
-    //     numInstances,
-    //     // Exclude bias
-    //     dWeightMatTrans + numFeaturesOut,
-    //     numFeaturesOut,
-    //     &beta,
-    //     dPreLayerErrorMat,
-    //     numInstances ) );
+    // use cublasCgemm3m ...
+
+
     cublasErrorCheck( cublasSgemm(
         cublasHandle,
         CUBLAS_OP_N,
@@ -250,8 +223,6 @@ void Layer::backPropError(
         numNodesPreLayer * numInstances );
     cudaErrorCheck( cudaGetLastError() );
 
-    cudaErrorCheck( cudaThreadSynchronize() );
-
     // Copy from device to host
     // For testing gradient descent
     float* preLayerErrorMat = (float*) malloc( numNodesPreLayer * numInstances * sizeof( float ) );
@@ -268,39 +239,64 @@ void Layer::backPropError(
 
     printf( "Err pre: %f\n", sum );
     free( preLayerErrorMat );
-
-
-    // Ignore bias input
-    // unsigned int offset = 1;
-    // for (unsigned int i = 0; i < numInstances; i++)
-    //     for (unsigned int idIn = 0; idIn < numNodesPreLayer; idIn++)
-    //     {
-    //         float sum = 0.0f;
-    //         for (unsigned int idNode = 0; idNode < numNodes; idNode++)
-    //             sum += weightMat[idNode * numFeaturesIn + idIn + offset] *
-    //                 errorMat[numNodes * i + idNode];
-    //         preLayerErrorMat[numNodesPreLayer * i + idIn] =
-    //             sum * inputMat[numFeaturesIn * i + idIn + offset] *
-    //             (1.0f - inputMat[numFeaturesIn * i + idIn + offset]);
-    //     }
 }
 
 void Layer::updateWeights(
-    const float* inputMat,
-    const float learningRate )
+    const float* dInputMat,
+    const float learningParam )
 {
-    for (unsigned int idNode = 0; idNode < numNodes; idNode++)
-        for (unsigned int idIn = 0; idIn < numFeaturesIn; idIn++)
-        {
-            float sum = 0.0f;
-            for (unsigned int i = 0; i < numInstances; i++)
-                sum += inputMat[numFeaturesIn * i + idIn] *
-                    errorMat[numNodes * i + idNode];
-            weightMat[numFeaturesIn * idNode + idIn] -=
-                learningRate / (float) numInstances * sum;
-        }
+    const float alpha = 1.0f;
+    const float beta = 0.0f;
 
-    printf( "Back propagate completed, weight: %f\n", weightMat[0] );
+    // Compute delta weight mat
+    cublasErrorCheck( cublasSgemm(
+        cublasHandle,
+        CUBLAS_OP_T,
+        CUBLAS_OP_N,
+        numFeaturesIn,
+        numNodes,
+        numInstances,
+        &alpha,
+        dInputMat,
+        numInstances,
+        dErrorMat,
+        numInstances,
+        &beta,
+        dDeltaWeightMat,
+        numFeaturesIn ) );
+    // Update weight mat
+    cublasErrorCheck( cublasSaxpy(
+        cublasHandle,
+        weightMatSize,
+        &learningParam,
+        dDeltaWeightMat,
+        1,
+        dWeightMat,
+        1 ) );
+
+    // for (unsigned int idNode = 0; idNode < numNodes; idNode++)
+    //     for (unsigned int idIn = 0; idIn < numFeaturesIn; idIn++)
+    //     {
+    //         float sum = 0.0f;
+    //         for (unsigned int i = 0; i < numInstances; i++)
+    //             sum += inputMat[numFeaturesIn * i + idIn] *
+    //                 errorMat[numNodes * i + idNode];
+    //         weightMat[numFeaturesIn * idNode + idIn] -=
+    //             learningRate / (float) numInstances * sum;
+    //     }
+    // Copy from device to host
+    // For testing gradient descent
+    cudaErrorCheck( cudaMemcpy(
+        weightMat,
+        dWeightMat,
+        weightMatSize * sizeof( float ),
+        cudaMemcpyDeviceToHost ) );
+
+    float sum = 0.0f;
+    for (unsigned int i = 0; i < weightMatSize; i++)
+        sum += weightMat[i];
+
+    printf( "Back propagate completed, weight sum: %f\n", sum );
 }
 
 void Layer::computeOutputLayerError(

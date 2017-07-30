@@ -95,6 +95,7 @@ void NeuralNetwork::forwardProp()
 void NeuralNetwork::backProp(
     const float learningRate )
 {
+    float learningParam = -learningRate / (float) numInstances;
     // Backword propagation
     for (unsigned int i = numHiddenLayers; i > 0; i--)
     {
@@ -104,28 +105,14 @@ void NeuralNetwork::backProp(
             layerArr[i - 1].getDOutputPtr(),
             layerArr[i - 1].getSigGridDim(),
             layerArr[i - 1].getSigBlockDim() );
-        // printf( "layer: %d update weights ...\n", i );
-        // layerArr[i].updateWeights(
-        //     layerArr[i - 1].getDOutputPtr(),
-        //     learningRate );
-        // printf( "Weight: %f\n", layerArr[i].getWeightPtr()[0] );
-
-        // float sum = 0.0f;
-        // for (int i = 0; i < 10; i++)
-        //     for (int j = 0; j < 1001; j++)
-        //         sum += layerArr[i].getWeightPtr()[i * 1001 + j];
-        // printf( "Weight sum: %f\n", sum );
+        printf( "layer: %d update weights ...\n", i );
+        layerArr[i].updateWeights(
+            layerArr[i - 1].getDOutputPtr(),
+            learningParam );
     }
 
-    // printf( "layer: 0 update weights ...\n" );
-    // layerArr[0].updateWeights(
-    //     dFeatureMat,
-    //     learningRate );
-    // printf( "Weight: %f\n", layerArr[0].getWeightPtr()[0] );
-
-    // float sum = 0.0f;
-    // for (int i = 0; i < 1; i++)
-    //     for (int j = 0; j < 3; j++)
-    //         sum += layerArr[0].getWeightPtr()[i * 3 + j];
-    // printf( "Weight sum: %f\n", sum );
+    printf( "layer: 0 update weights ...\n" );
+    layerArr[0].updateWeights(
+        dFeatureMat,
+        learningParam );
 }
