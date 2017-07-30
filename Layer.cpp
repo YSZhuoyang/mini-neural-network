@@ -116,13 +116,11 @@ void Layer::updateWeights(
                 learningRate / (float) numInstances * sum;
         }
 
-    // float sum = 0.0f;
-    // for (int i = 0; i < numNodes; i++)
-    //     for (int j = 0; j < numFeaturesIn; j++)
-    //         sum += weightMat[i * numFeaturesIn + j];
-    // printf( "Weight sum: %f\n", sum );
-
-    printf( "Back propagate completed, weight: %f\n", weightMat[0] );
+    float sum = 0.0f;
+    for (int i = 0; i < numNodes; i++)
+        for (int j = 0; j < numFeaturesIn; j++)
+            sum += weightMat[i * numFeaturesIn + j];
+    printf( "Back propagate completed, Weight sum: %f\n", sum );
 }
 
 void Layer::computeOutputLayerError( const unsigned short* classIndexVec )
