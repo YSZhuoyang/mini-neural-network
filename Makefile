@@ -12,7 +12,8 @@ SHELL = /bin/sh
 
 # Enable Nvidia gpu
 NVCC = nvcc
-NVCCCFLAGS = -arch=sm_50 -std=c++11 -O3 -use_fast_math -lcublas# -lcublas_device -rdc=true -lcudadevrt
+NVCCCFLAGS = -arch=sm_50 -std=c++11 -O3 -use_fast_math -lcublas
+CUFLAGS = -x cu
 OBJECTS = Helper.o ArffImporter.o Layer.o NeuralNetwork.o Main.o
 
 ################################ Compile ################################
@@ -26,8 +27,8 @@ Helper.o: Helper.cpp Helper.h BasicDataStructures.h
 ArffImporter.o: ArffImporter.cpp ArffImporter.h BasicDataStructures.h Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c ArffImporter.cpp
 
-Layer.o: Layer.cu Layer.h BasicDataStructures.h Helper.o
-	$(NVCC) ${NVCCCFLAGS} -c Layer.cu
+Layer.o: Layer.cpp Layer.h BasicDataStructures.h Helper.o
+	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Layer.cpp
 
 NeuralNetwork.o: NeuralNetwork.cpp NeuralNetwork.h BasicDataStructures.h Layer.o Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c NeuralNetwork.cpp
