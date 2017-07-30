@@ -169,6 +169,29 @@ void Layer::backPropError(
     const float* inputMat )
 {
     unsigned int numNodesPreLayer = numFeaturesIn - 1;
+
+    // const float alpha = 1.0f;
+    // const float beta = 0.0f;
+
+    // cublasErrorCheck( cublasSgemm(
+    //     cublasHandle,
+    //     CUBLAS_OP_N,
+    //     CUBLAS_OP_N,
+    //     numNodesPreLayer,
+    //     numInstances,
+    //     numFeaturesOut,
+    //     &alpha,
+    //     dInputMat,
+    //     numInstances,
+    //     // Exclude bias
+    //     dWeightMat + 1,
+    //     numFeaturesIn,
+    //     &beta,
+    //     preLayerErrorMat,
+    //     numInstances ) );
+
+    // preLayerErrorMat ele wise dot inputMat ele wise dot (1 - inputMat) ...
+
     // Ignore bias input
     unsigned int offset = 1;
     for (unsigned int i = 0; i < numInstances; i++)
