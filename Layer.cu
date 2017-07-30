@@ -98,7 +98,7 @@ void Layer::init(
             // To be randomized
             weightMat[i * numFeaturesIn + j] = 0.0f;
 
-    /* Determine block and grid size of ComputeCost kernel */
+    /* Determine block and grid size of kernel functions */
     if (outputMatSize > 128)
     {
         ccBlockDim.x = 128;
@@ -157,7 +157,8 @@ float* Layer::forwardOutput( const float* dInputMat )
         numInstances ) );
     Sigmid<<< sigGridDim, sigBlockDim >>>(
         dOutputMatOffset,
-        numInstances * numNodes );
+        // Error mat size = output mat size without X0s
+        errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
 
     return dOutputMat;
@@ -215,7 +216,7 @@ void Layer::computeOutputLayerError(
         dErrorMat,
         dOutputMat,
         dClassIndexVec,
-        numInstances * numNodes );
+        errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
 
     // Copy from device to host
