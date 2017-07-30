@@ -95,7 +95,7 @@ void Layer::backPropError(
     // float sum = 0.0f;
     // for (int i = 0; i < numNodesPreLayer; i++)
     //     for (int j = 0; j < numInstances; j++)
-    //         sum += fabs(preLayerErrorMat[j * numNodes + i]);
+    //         sum += preLayerErrorMat[j * numNodesPreLayer + i];
     // printf( "Pre Error sum: %f\n", sum );
 
     // printf( "error in: %f\n", preLayerErrorMat[0] );
