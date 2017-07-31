@@ -29,8 +29,8 @@ int main()
     neuralNetwork.train(
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndex(),
-        1,
-        0.1f,
+        2000,
+        0.2f,
         1.0f );
     // neuralNetwork.Classify(
     //     testSetImporter.GetInstances(),

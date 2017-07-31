@@ -99,18 +99,13 @@ void Layer::init(
 
     // Setup bias in non-output layer
     if (layerType == HIDDEN_LAYER)
-    {
-        outputOffset = 1;
         // Fill the first feature with X0 for bias
         for (unsigned int i = 0; i < numInstances; i++)
-            outputMat[i] = 1;
-    }
+            outputMat[i] = 1.0f;
 
-    // Init weight matrix
-    for (unsigned int i = 0; i < numNodes; i++)
-        for (unsigned int j = 0; j < numFeaturesIn; j++)
-            // To be randomized
-            weightMat[i * numFeaturesIn + j] = 1.0f;
+    // Randomly init weight matrix
+    for (unsigned int i = 0; i < weightMatSize; i++)
+        weightMat[i] = ((float) (rand() % 101) - 50.0f) / 50.0f;
 
     /* Determine block and grid size of kernel functions */
     if (outputMatSize > 128)
@@ -217,20 +212,20 @@ void Layer::backPropError(
 
     // Copy from device to host
     // For testing gradient descent
-    float* preLayerErrorMat = (float*) malloc( numNodesPreLayer * numInstances * sizeof( float ) );
-    cudaErrorCheck( cudaMemcpy(
-        preLayerErrorMat,
-        dPreLayerErrorMat,
-        numNodesPreLayer * numInstances * sizeof( float ),
-        cudaMemcpyDeviceToHost ) );
+    // float* preLayerErrorMat = (float*) malloc( numNodesPreLayer * numInstances * sizeof( float ) );
+    // cudaErrorCheck( cudaMemcpy(
+    //     preLayerErrorMat,
+    //     dPreLayerErrorMat,
+    //     numNodesPreLayer * numInstances * sizeof( float ),
+    //     cudaMemcpyDeviceToHost ) );
 
-    float sum = 0.0f;
-    for (unsigned int i = 0; i < numInstances; i++)
-        for (unsigned int j = 0; j < numNodesPreLayer; j++)
-            sum += preLayerErrorMat[i * numNodesPreLayer + j];
+    // float sum = 0.0f;
+    // for (unsigned int i = 0; i < numInstances; i++)
+    //     for (unsigned int j = 0; j < numNodesPreLayer; j++)
+    //         sum += preLayerErrorMat[i * numNodesPreLayer + j];
 
-    printf( "Err pre: %f\n", sum );
-    free( preLayerErrorMat );
+    // printf( "Err pre: %f\n", sum );
+    // free( preLayerErrorMat );
 }
 
 void Layer::updateWeights(
