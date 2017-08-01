@@ -92,25 +92,23 @@ void NeuralNetwork::forwardProp()
     layerArr[numHiddenLayers].computeOutputLayerError( dClassIndexVec, classIndexVec );
 }
 
-void NeuralNetwork::backProp(
-    const float learningParam )
+void NeuralNetwork::backProp( const float learningParam )
 {
     // Backword propagation
     for (unsigned int i = numHiddenLayers; i > 0; i--)
     {
-        printf( "layer: %d back propagate ...\n", i );
-        layerArr[i].backPropError(
-            layerArr[i - 1].getDErrorPtr(),
-            layerArr[i - 1].getDOutputPtr(),
-            layerArr[i - 1].getSigGridDim(),
-            layerArr[i - 1].getSigBlockDim() );
-        printf( "layer: %d update weights ...\n", i );
+        printf( "layer %d: back propagate ...\n", i );
+        layerArr[i - 1].backPropError(
+            layerArr[i].getDErrorPtr(),
+            layerArr[i].getDWeightPtr(),
+            layerArr[i].getNumFeaturesOut() );
+        printf( "layer %d: update weights ...\n", i );
         layerArr[i].updateWeights(
             layerArr[i - 1].getDOutputPtr(),
             learningParam );
     }
 
-    printf( "layer: 0 update weights ...\n" );
+    printf( "layer 0: update weights ...\n" );
     layerArr[0].updateWeights(
         dFeatureMat,
         learningParam );

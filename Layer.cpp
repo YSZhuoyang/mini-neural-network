@@ -30,15 +30,15 @@ __global__ void ComputeOutputLayerError(
 }
 
 __global__ void BackPropError(
-    float* __restrict__ dPreLayerErrorMat,
-    const float* __restrict__ dInputMatOffset,
-    const unsigned int preErrorMatSize )
+    float* __restrict__ dErrorMat,
+    const float* __restrict__ dOutputMatOffset,
+    const unsigned int errorMatSize )
 {
     unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
-    if (eleId >= preErrorMatSize) return;
+    if (eleId >= errorMatSize) return;
 
-    float preError = dInputMatOffset[eleId] * (1.0f - dInputMatOffset[eleId]);
-    dPreLayerErrorMat[eleId] *= preError;
+    float error = dOutputMatOffset[eleId] * (1.0f - dOutputMatOffset[eleId]);
+    dErrorMat[eleId] *= error;
 }
 
 
@@ -108,17 +108,17 @@ void Layer::init(
         weightMat[i] = ((float) (rand() % 101) - 50.0f) / 50.0f;
 
     /* Determine block and grid size of kernel functions */
-    if (outputMatSize > 128)
+    if (outputMatSize > NUM_BLOCK_THREADS)
     {
-        ccBlockDim.x = 128;
-        ccGridDim.x = (outputMatSize + 127) / 128;
+        ccBlockDim.x = NUM_BLOCK_THREADS;
+        ccGridDim.x = (outputMatSize + NUM_BLOCK_THREADS - 1) / NUM_BLOCK_THREADS;
     }
     else ccBlockDim.x = outputMatSize;
 
-    if (errorMatSize > 128)
+    if (errorMatSize > NUM_BLOCK_THREADS)
     {
-        sigBlockDim.x = 128;
-        sigGridDim.x = (errorMatSize + 127) / 128;
+        sigBlockDim.x = NUM_BLOCK_THREADS;
+        sigGridDim.x = (errorMatSize + NUM_BLOCK_THREADS - 1) / NUM_BLOCK_THREADS;
     }
     else sigBlockDim.x = errorMatSize;
 
@@ -175,13 +175,10 @@ float* Layer::forwardOutput( const float* dInputMat )
 }
 
 void Layer::backPropError(
-    float* dPreLayerErrorMat,
-    const float* dInputMat,
-    dim3 bpeGridDim,
-    dim3 bpeBlockDim )
+    const float* dNextLayerErrorMat,
+    const float* dNextLayerWeightMat,
+    const unsigned int numNextLayerFeasOut )
 {
-    unsigned int numNodesPreLayer = numFeaturesIn - 1;
-
     const float alpha = 1.0f;
     const float beta = 0.0f;
 
@@ -193,39 +190,36 @@ void Layer::backPropError(
         CUBLAS_OP_N,
         CUBLAS_OP_T,
         numInstances,
-        numNodesPreLayer,
-        numFeaturesOut,
+        numNodes,
+        numNextLayerFeasOut,
         &alpha,
-        dErrorMat,
+        dNextLayerErrorMat,
         numInstances,
         // Exclude bias
-        dWeightMat + 1,
-        numFeaturesIn,
+        dNextLayerWeightMat + 1,
+        numFeaturesOut,
         &beta,
-        dPreLayerErrorMat,
+        dErrorMat,
         numInstances ) );
-    BackPropError<<< bpeGridDim, bpeBlockDim >>>(
-        dPreLayerErrorMat,
-        dInputMat + numInstances,
-        numNodesPreLayer * numInstances );
+    BackPropError<<< sigGridDim, sigBlockDim >>>(
+        dErrorMat,
+        dOutputMat + numInstances,
+        errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
 
     // Copy from device to host
     // For testing gradient descent
-    // float* preLayerErrorMat = (float*) malloc( numNodesPreLayer * numInstances * sizeof( float ) );
     // cudaErrorCheck( cudaMemcpy(
-    //     preLayerErrorMat,
-    //     dPreLayerErrorMat,
-    //     numNodesPreLayer * numInstances * sizeof( float ),
+    //     errorMat,
+    //     dErrorMat,
+    //     errorMatSize * sizeof( float ),
     //     cudaMemcpyDeviceToHost ) );
 
     // float sum = 0.0f;
-    // for (unsigned int i = 0; i < numInstances; i++)
-    //     for (unsigned int j = 0; j < numNodesPreLayer; j++)
-    //         sum += preLayerErrorMat[i * numNodesPreLayer + j];
+    // for (unsigned int i = 0; i < errorMatSize; i++)
+    //     sum += errorMat[i];
 
     // printf( "Err pre: %f\n", sum );
-    // free( preLayerErrorMat );
 }
 
 void Layer::updateWeights(
@@ -340,12 +334,7 @@ float* Layer::getErrorPtr()
     return errorMat;
 }
 
-dim3 Layer::getSigGridDim()
+unsigned int Layer::getNumFeaturesOut()
 {
-    return sigGridDim;
-}
-
-dim3 Layer::getSigBlockDim()
-{
-    return sigBlockDim;
+    return numFeaturesOut;
 }
