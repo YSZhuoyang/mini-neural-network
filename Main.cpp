@@ -15,8 +15,10 @@ int main()
     cublasHandle_t cublasHandle;
     cublasErrorCheck( cublasCreate( &cublasHandle ) );
 
+    // Number of layers excluding input layer
     const unsigned int numLayers = 2;
     unsigned int architecture[numLayers + 1];
+    // Number of features in each layer including input layer
     architecture[0] = trainSetImporter.GetNumFeatures();
     architecture[1] = 11;
     architecture[2] = 1;

@@ -34,9 +34,11 @@ private:
     // Does not include input layer
     float* dFeatureMat               = nullptr;
     unsigned short* dClassIndexVec   = nullptr;
+    // Number of features in each layer including input layer
     const unsigned int* architecture = nullptr;
     Layer* layerArr                  = nullptr;
     unsigned int numInstances        = 0;
+    // Number of layers excluding input layer
     unsigned short numLayers         = 0;
     unsigned short numHiddenLayers   = 0;
 };

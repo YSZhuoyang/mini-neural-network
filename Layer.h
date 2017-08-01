@@ -50,14 +50,12 @@ private:
     float* weightMat            = nullptr;
     float* outputMat            = nullptr;
     float* errorMat             = nullptr;
-    float* preLayerErrorMat     = nullptr;
     // Device data
     float* dWeightMat           = nullptr;
     float* dDeltaWeightMat      = nullptr;
     float* dOutputMat           = nullptr;
     float* dOutputMatOffset     = nullptr;
     float* dErrorMat            = nullptr;
-    float* dPreLayerErrorMat    = nullptr;
     unsigned int numInstances   = 0;
     unsigned int numFeaturesOut = 0;
     unsigned int numFeaturesIn  = 0;
