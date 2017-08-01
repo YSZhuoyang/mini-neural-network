@@ -5,8 +5,10 @@
 #include "Helper.h"
 
 
-#define HIDDEN_LAYER 0
-#define OUTPUT_LAYER 1
+
+#define NUM_BLOCK_THREADS 128
+#define HIDDEN_LAYER      0
+#define OUTPUT_LAYER      1
 
 using namespace MyHelper;
 
@@ -25,10 +27,9 @@ public:
         cublasHandle_t cublasHandle );
     float* forwardOutput( const float* dInputMat );
     void backPropError(
-        float* preLayerErrorMat,
-        const float* dInputMat,
-        dim3 bpeGridDim,
-        dim3 bpeBlockDim );
+        const float* dNextLayerErrorMat,
+        const float* dNextLayerWeightMat,
+        const unsigned int numNextLayerFeasOut );
     void updateWeights(
         const float* dInputMat,
         const float learningParam );
@@ -41,8 +42,7 @@ public:
     float* getDWeightPtr();
     float* getDOutputPtr();
     float* getDErrorPtr();
-    dim3 getSigGridDim();
-    dim3 getSigBlockDim();
+    unsigned int getNumFeaturesOut();
 
 
 private:
