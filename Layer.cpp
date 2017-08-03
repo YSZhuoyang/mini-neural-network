@@ -257,17 +257,17 @@ void Layer::updateWeights(
 
     // Copy from device to host
     // For testing gradient descent
-    cudaErrorCheck( cudaMemcpy(
-        weightMat,
-        dWeightMat,
-        weightMatSize * sizeof( float ),
-        cudaMemcpyDeviceToHost ) );
+    // cudaErrorCheck( cudaMemcpy(
+    //     weightMat,
+    //     dWeightMat,
+    //     weightMatSize * sizeof( float ),
+    //     cudaMemcpyDeviceToHost ) );
 
-    float sum = 0.0f;
-    for (unsigned int i = 0; i < weightMatSize; i++)
-        sum += weightMat[i];
+    // float sum = 0.0f;
+    // for (unsigned int i = 0; i < weightMatSize; i++)
+    //     sum += weightMat[i];
 
-    printf( "Back propagate completed, weight sum: %f\n", sum );
+    // printf( "Back propagate completed, weight sum: %f\n", sum );
 }
 
 void Layer::computeOutputLayerError(
