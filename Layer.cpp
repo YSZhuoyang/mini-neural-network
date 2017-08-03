@@ -142,7 +142,9 @@ void Layer::init(
     dOutputMatOffset = (layerType != HIDDEN_LAYER) ? dOutputMat : dOutputMat + numInstances;
 }
 
-float* Layer::forwardOutput( const float* dInputMat )
+float* Layer::forwardOutput(
+    const float* dInputMat,
+    cudaStream_t stream )
 {
     // use cublasCgemm3m ...
 
@@ -165,7 +167,7 @@ float* Layer::forwardOutput( const float* dInputMat )
         &beta,
         dOutputMatOffset,
         numInstances ) );
-    Sigmid<<< sigGridDim, sigBlockDim >>>(
+    Sigmid<<< sigGridDim, sigBlockDim, 0, stream >>>(
         dOutputMatOffset,
         // Error mat size = output mat size without X0s
         errorMatSize );
@@ -177,7 +179,8 @@ float* Layer::forwardOutput( const float* dInputMat )
 void Layer::backPropError(
     const float* dNextLayerErrorMat,
     const float* dNextLayerWeightMat,
-    const unsigned int numNextLayerFeasOut )
+    const unsigned int numNextLayerFeasOut,
+    cudaStream_t stream )
 {
     const float alpha = 1.0f;
     const float beta = 0.0f;
@@ -201,7 +204,7 @@ void Layer::backPropError(
         &beta,
         dErrorMat,
         numInstances ) );
-    BackPropError<<< sigGridDim, sigBlockDim >>>(
+    BackPropError<<< sigGridDim, sigBlockDim, 0, stream >>>(
         dErrorMat,
         dOutputMat + numInstances,
         errorMatSize );
@@ -220,6 +223,41 @@ void Layer::backPropError(
     //     sum += errorMat[i];
 
     // printf( "Err pre: %f\n", sum );
+}
+
+void Layer::computeOutputLayerError(
+    const unsigned short* dClassIndexVec,
+    const unsigned short* classIndexVec,
+    cudaStream_t stream )
+{
+    if (layerType != OUTPUT_LAYER)
+    {
+        printf( "computeOutputLayerError() can only be ran by output layer.\n" );
+        return;
+    }
+
+    ComputeOutputLayerError<<< ccGridDim, ccBlockDim, 0, stream >>>(
+        dErrorMat,
+        dOutputMat,
+        dClassIndexVec,
+        errorMatSize );
+    cudaErrorCheck( cudaGetLastError() );
+
+    // Copy from device to host
+    // For testing gradient descent
+    cudaErrorCheck( cudaMemcpy(
+        outputMat,
+        dOutputMat,
+        outputMatSize * sizeof( float ),
+        cudaMemcpyDeviceToHost ) );
+
+    float costSum = 0.0f;
+    for (unsigned int i = 0; i < numInstances; i++)
+        for (unsigned int j = 0; j < numNodes; j++)
+            costSum -= (classIndexVec[i]) ?
+                logf(outputMat[i * numNodes + j]) : logf(1.0f - outputMat[i * numNodes + j]);
+
+    printf( "Cost: %f\n", costSum );
 }
 
 void Layer::updateWeights(
@@ -257,51 +295,17 @@ void Layer::updateWeights(
 
     // Copy from device to host
     // For testing gradient descent
-    cudaErrorCheck( cudaMemcpy(
-        weightMat,
-        dWeightMat,
-        weightMatSize * sizeof( float ),
-        cudaMemcpyDeviceToHost ) );
+    // cudaErrorCheck( cudaMemcpy(
+    //     weightMat,
+    //     dWeightMat,
+    //     weightMatSize * sizeof( float ),
+    //     cudaMemcpyDeviceToHost ) );
 
-    float sum = 0.0f;
-    for (unsigned int i = 0; i < weightMatSize; i++)
-        sum += weightMat[i];
+    // float sum = 0.0f;
+    // for (unsigned int i = 0; i < weightMatSize; i++)
+    //     sum += weightMat[i];
 
-    printf( "Back propagate completed, weight sum: %f\n", sum );
-}
-
-void Layer::computeOutputLayerError(
-    const unsigned short* dClassIndexVec,
-    const unsigned short* classIndexVec )
-{
-    if (layerType != OUTPUT_LAYER)
-    {
-        printf( "computeOutputLayerError() can only be ran by output layer.\n" );
-        return;
-    }
-
-    ComputeOutputLayerError<<< ccGridDim, ccBlockDim >>>(
-        dErrorMat,
-        dOutputMat,
-        dClassIndexVec,
-        errorMatSize );
-    cudaErrorCheck( cudaGetLastError() );
-
-    // Copy from device to host
-    // For testing gradient descent
-    cudaErrorCheck( cudaMemcpy(
-        outputMat,
-        dOutputMat,
-        outputMatSize * sizeof( float ),
-        cudaMemcpyDeviceToHost ) );
-
-    float costSum = 0.0f;
-    for (unsigned int i = 0; i < numInstances; i++)
-        for (unsigned int j = 0; j < numNodes; j++)
-            costSum -= (classIndexVec[i]) ?
-                logf(outputMat[i * numNodes + j]) : logf(1.0f - outputMat[i * numNodes + j]);
-
-    printf( "Cost: %f\n", costSum );
+    // printf( "Back propagate completed, weight sum: %f\n", sum );
 }
 
 float* Layer::getDWeightPtr()

@@ -25,17 +25,21 @@ public:
         // Determine wether X0 for bias is included in output features
         const unsigned short layerType,
         cublasHandle_t cublasHandle );
-    float* forwardOutput( const float* dInputMat );
+    float* forwardOutput(
+        const float* dInputMat,
+        cudaStream_t stream );
     void backPropError(
         const float* dNextLayerErrorMat,
         const float* dNextLayerWeightMat,
-        const unsigned int numNextLayerFeasOut );
+        const unsigned int numNextLayerFeasOut,
+        cudaStream_t stream );
+    void computeOutputLayerError(
+        const unsigned short* dClassIndexVec,
+        const unsigned short* classIndexVec,
+        cudaStream_t stream );
     void updateWeights(
         const float* dInputMat,
         const float learningParam );
-    void computeOutputLayerError(
-        const unsigned short* dClassIndexVec,
-        const unsigned short* classIndexVec );
     float* getOutputPtr();
     float* getErrorPtr();
     float* getWeightPtr();

@@ -9,11 +9,20 @@ NeuralNetwork::NeuralNetwork()
 
 NeuralNetwork::~NeuralNetwork()
 {
+    cudaErrorCheck( cudaStreamDestroy( stream1 ) );
+    cudaErrorCheck( cudaStreamDestroy( stream2 ) );
+
+    cudaErrorCheck( cudaEventDestroy( forwardPropEvent ) );
+    for (unsigned int i = 0; i < numHiddenLayers; i++)
+        cudaErrorCheck( cudaEventDestroy( backPropEvents[i] ) );
+    free( backPropEvents );
+    backPropEvents = nullptr;
+
     delete[] layerArr;
     layerArr = nullptr;
 
-    cudaFree( dFeatureMat );
-    cudaFree( dClassIndexVec );
+    cudaErrorCheck( cudaFree( dFeatureMat ) );
+    cudaErrorCheck( cudaFree( dClassIndexVec ) );
     dFeatureMat = nullptr;
     dClassIndexVec = nullptr;
 }
@@ -28,6 +37,8 @@ void NeuralNetwork::initLayers(
     this->architecture = architecture;
     this->numLayers = numLayers;
     this->numInstances = numInstances;
+    this->cublasHandle = cublasHandle;
+
     numHiddenLayers = numLayers - 1;
     layerArr = new Layer[numLayers];
 
@@ -44,6 +55,13 @@ void NeuralNetwork::initLayers(
             layerType,
             cublasHandle );
     }
+
+    cudaErrorCheck( cudaStreamCreate( &stream1 ) );
+    cudaErrorCheck( cudaStreamCreate( &stream2 ) );
+    cudaErrorCheck( cudaEventCreate( &forwardPropEvent ) );
+    backPropEvents = (cudaEvent_t *) malloc( numHiddenLayers * sizeof( cudaEvent_t ) );
+    for (unsigned int i = 0; i < numHiddenLayers; i++)
+        cudaErrorCheck( cudaEventCreate( &backPropEvents[i] ) );
 }
 
 void NeuralNetwork::train(
@@ -82,14 +100,22 @@ void NeuralNetwork::train(
 
 void NeuralNetwork::forwardProp()
 {
+    cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
+
     // Forward propagation
     const float* dInputMat = dFeatureMat;
     for (unsigned int i = 0; i < numLayers; i++)
     {
         printf( "layer: %d forward output ...\n", i );
-        dInputMat = layerArr[i].forwardOutput( dInputMat );
+        dInputMat = layerArr[i].forwardOutput( dInputMat, stream1 );
     }
-    layerArr[numHiddenLayers].computeOutputLayerError( dClassIndexVec, classIndexVec );
+    layerArr[numHiddenLayers].computeOutputLayerError(
+        dClassIndexVec,
+        classIndexVec,
+        stream1 );
+
+    cudaErrorCheck( cudaEventRecord( forwardPropEvent ) );
+    cudaErrorCheck( cudaStreamWaitEvent( stream2, forwardPropEvent, 0 ) );
 }
 
 void NeuralNetwork::backProp( const float learningParam )
@@ -98,11 +124,17 @@ void NeuralNetwork::backProp( const float learningParam )
     for (unsigned int i = numHiddenLayers; i > 0; i--)
     {
         printf( "layer %d: back propagate ...\n", i );
+        cublasErrorCheck( cublasSetStream( cublasHandle, stream2 ) );
         layerArr[i - 1].backPropError(
             layerArr[i].getDErrorPtr(),
             layerArr[i].getDWeightPtr(),
-            layerArr[i].getNumFeaturesOut() );
+            layerArr[i].getNumFeaturesOut(),
+            stream2 );
+        cudaErrorCheck( cudaEventRecord( backPropEvents[i - 1] ) );
+
         printf( "layer %d: update weights ...\n", i );
+        cudaErrorCheck( cudaStreamWaitEvent( stream1, backPropEvents[i - 1], 0 ) );
+        cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
         layerArr[i].updateWeights(
             layerArr[i - 1].getDOutputPtr(),
             learningParam );
