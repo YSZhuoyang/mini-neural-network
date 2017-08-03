@@ -42,8 +42,8 @@ private:
     unsigned short numLayers         = 0;
     unsigned short numHiddenLayers   = 0;
 
-    cudaEvent_t* backPropEvents      = nullptr;
-    cudaEvent_t forwardPropEvent;
+    cudaEvent_t* backPropCompletes      = nullptr;
+    cudaEvent_t forwardPropComplete;
     cudaStream_t stream1;
     cudaStream_t stream2;
     cublasHandle_t cublasHandle;

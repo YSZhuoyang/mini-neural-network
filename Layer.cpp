@@ -245,19 +245,19 @@ void Layer::computeOutputLayerError(
 
     // Copy from device to host
     // For testing gradient descent
-    cudaErrorCheck( cudaMemcpy(
-        outputMat,
-        dOutputMat,
-        outputMatSize * sizeof( float ),
-        cudaMemcpyDeviceToHost ) );
+    // cudaErrorCheck( cudaMemcpy(
+    //     outputMat,
+    //     dOutputMat,
+    //     outputMatSize * sizeof( float ),
+    //     cudaMemcpyDeviceToHost ) );
 
-    float costSum = 0.0f;
-    for (unsigned int i = 0; i < numInstances; i++)
-        for (unsigned int j = 0; j < numNodes; j++)
-            costSum -= (classIndexVec[i]) ?
-                logf(outputMat[i * numNodes + j]) : logf(1.0f - outputMat[i * numNodes + j]);
+    // float costSum = 0.0f;
+    // for (unsigned int i = 0; i < numInstances; i++)
+    //     for (unsigned int j = 0; j < numNodes; j++)
+    //         costSum -= (classIndexVec[i]) ?
+    //             logf(outputMat[i * numNodes + j]) : logf(1.0f - outputMat[i * numNodes + j]);
 
-    printf( "Cost: %f\n", costSum );
+    // printf( "Cost: %f\n", costSum );
 }
 
 void Layer::updateWeights(

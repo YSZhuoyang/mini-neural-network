@@ -28,12 +28,22 @@ int main()
         numLayers,
         architecture,
         cublasHandle );
+
+    time_t start, end;
+    double dif;
+    time( &start );
+
     neuralNetwork.train(
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndex(),
-        20,
+        500,
         0.2f,
         1.0f );
+
+    time( &end );
+    dif = difftime( end, start );
+    printf( "Time taken: %.2lf seconds.\n", dif );
+
     // neuralNetwork.Classify(
     //     testSetImporter.GetInstances(),
     //     testSetImporter.GetNumInstances() );
