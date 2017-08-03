@@ -78,6 +78,26 @@ void NeuralNetwork::train(
 
         printf( "\n" );
     }
+
+    // Copy from device to host
+    // For testing gradient descent
+    float* outputMat = layerArr[numHiddenLayers].getOutputPtr();
+    float* dOutputMat = layerArr[numHiddenLayers].getDOutputPtr();
+    unsigned int numFeaturesOut = layerArr[numHiddenLayers].getNumFeaturesOut();
+    unsigned int outputMatSize = numFeaturesOut * numInstances;
+    cudaErrorCheck( cudaMemcpy(
+        outputMat,
+        dOutputMat,
+        outputMatSize * sizeof( float ),
+        cudaMemcpyDeviceToHost ) );
+
+    float costSum = 0.0f;
+    for (unsigned int i = 0; i < numInstances; i++)
+        for (unsigned int j = 0; j < numFeaturesOut; j++)
+            costSum -= (classIndexVec[i]) ?
+                logf(outputMat[i * numFeaturesOut + j]) : logf(1.0f - outputMat[i * numFeaturesOut + j]);
+
+    printf( "Cost: %f\n", costSum );
 }
 
 void NeuralNetwork::forwardProp()
