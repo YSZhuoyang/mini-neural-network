@@ -89,9 +89,9 @@ void NeuralNetwork::train(
 
     float learningParam = -learningRate / (float) numInstances;
     unsigned int iter = 0;
+    cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
     while (iter++ < maxIter)
     {
-        cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
         forwardProp();
         backProp( learningParam );
 
