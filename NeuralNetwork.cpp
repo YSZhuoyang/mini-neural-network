@@ -58,10 +58,10 @@ void NeuralNetwork::initLayers(
 
     cudaErrorCheck( cudaStreamCreate( &stream1 ) );
     cudaErrorCheck( cudaStreamCreate( &stream2 ) );
-    cudaErrorCheck( cudaEventCreate( &forwardPropComplete ) );
+    cudaErrorCheck( cudaEventCreateWithFlags( &forwardPropComplete, cudaEventDisableTiming ) );
     backPropCompletes = (cudaEvent_t *) malloc( numHiddenLayers * sizeof( cudaEvent_t ) );
     for (unsigned int i = 0; i < numHiddenLayers; i++)
-        cudaErrorCheck( cudaEventCreate( &backPropCompletes[i] ) );
+        cudaErrorCheck( cudaEventCreateWithFlags( &backPropCompletes[i], cudaEventDisableTiming ) );
 }
 
 void NeuralNetwork::train(
@@ -133,7 +133,7 @@ void NeuralNetwork::forwardProp()
         classIndexVec,
         stream1 );
 
-    cudaErrorCheck( cudaEventRecord( forwardPropComplete ) );
+    cudaErrorCheck( cudaEventRecord( forwardPropComplete, stream1 ) );
     cudaErrorCheck( cudaStreamWaitEvent( stream2, forwardPropComplete, 0 ) );
 }
 
@@ -149,7 +149,7 @@ void NeuralNetwork::backProp( const float learningParam )
             layerArr[i].getDWeightPtr(),
             layerArr[i].getNumFeaturesOut(),
             stream2 );
-        cudaErrorCheck( cudaEventRecord( backPropCompletes[i - 1] ) );
+        cudaErrorCheck( cudaEventRecord( backPropCompletes[i - 1], stream2 ) );
 
         printf( "layer %d: update weights ...\n", i );
         cudaErrorCheck( cudaStreamWaitEvent( stream1, backPropCompletes[i - 1], 0 ) );
