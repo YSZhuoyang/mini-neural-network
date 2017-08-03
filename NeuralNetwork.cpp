@@ -9,11 +9,20 @@ NeuralNetwork::NeuralNetwork()
 
 NeuralNetwork::~NeuralNetwork()
 {
+    cudaErrorCheck( cudaStreamDestroy( stream1 ) );
+    cudaErrorCheck( cudaStreamDestroy( stream2 ) );
+
+    cudaErrorCheck( cudaEventDestroy( forwardPropComplete ) );
+    for (unsigned int i = 0; i < numHiddenLayers; i++)
+        cudaErrorCheck( cudaEventDestroy( backPropCompletes[i] ) );
+    free( backPropCompletes );
+    backPropCompletes = nullptr;
+
     delete[] layerArr;
     layerArr = nullptr;
 
-    cudaFree( dFeatureMat );
-    cudaFree( dClassIndexVec );
+    cudaErrorCheck( cudaFree( dFeatureMat ) );
+    cudaErrorCheck( cudaFree( dClassIndexVec ) );
     dFeatureMat = nullptr;
     dClassIndexVec = nullptr;
 }
@@ -28,6 +37,8 @@ void NeuralNetwork::initLayers(
     this->architecture = architecture;
     this->numLayers = numLayers;
     this->numInstances = numInstances;
+    this->cublasHandle = cublasHandle;
+
     numHiddenLayers = numLayers - 1;
     layerArr = new Layer[numLayers];
 
@@ -44,6 +55,13 @@ void NeuralNetwork::initLayers(
             layerType,
             cublasHandle );
     }
+
+    cudaErrorCheck( cudaStreamCreate( &stream1 ) );
+    cudaErrorCheck( cudaStreamCreate( &stream2 ) );
+    cudaErrorCheck( cudaEventCreateWithFlags( &forwardPropComplete, cudaEventDisableTiming ) );
+    backPropCompletes = (cudaEvent_t *) malloc( numHiddenLayers * sizeof( cudaEvent_t ) );
+    for (unsigned int i = 0; i < numHiddenLayers; i++)
+        cudaErrorCheck( cudaEventCreateWithFlags( &backPropCompletes[i], cudaEventDisableTiming ) );
 }
 
 void NeuralNetwork::train(
@@ -73,11 +91,32 @@ void NeuralNetwork::train(
     unsigned int iter = 0;
     while (iter++ < maxIter)
     {
+        cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
         forwardProp();
         backProp( learningParam );
 
         printf( "\n" );
     }
+
+    // Copy from device to host
+    // For testing gradient descent
+    float* outputMat = layerArr[numHiddenLayers].getOutputPtr();
+    float* dOutputMat = layerArr[numHiddenLayers].getDOutputPtr();
+    unsigned int numFeaturesOut = layerArr[numHiddenLayers].getNumFeaturesOut();
+    unsigned int outputMatSize = numFeaturesOut * numInstances;
+    cudaErrorCheck( cudaMemcpy(
+        outputMat,
+        dOutputMat,
+        outputMatSize * sizeof( float ),
+        cudaMemcpyDeviceToHost ) );
+
+    float costSum = 0.0f;
+    for (unsigned int i = 0; i < numInstances; i++)
+        for (unsigned int j = 0; j < numFeaturesOut; j++)
+            costSum -= (classIndexVec[i]) ?
+                logf(outputMat[i * numFeaturesOut + j]) : logf(1.0f - outputMat[i * numFeaturesOut + j]);
+
+    printf( "Cost: %f\n", costSum );
 }
 
 void NeuralNetwork::forwardProp()
@@ -87,9 +126,15 @@ void NeuralNetwork::forwardProp()
     for (unsigned int i = 0; i < numLayers; i++)
     {
         printf( "layer: %d forward output ...\n", i );
-        dInputMat = layerArr[i].forwardOutput( dInputMat );
+        dInputMat = layerArr[i].forwardOutput( dInputMat, stream1 );
     }
-    layerArr[numHiddenLayers].computeOutputLayerError( dClassIndexVec, classIndexVec );
+    layerArr[numHiddenLayers].computeOutputLayerError(
+        dClassIndexVec,
+        classIndexVec,
+        stream1 );
+
+    cudaErrorCheck( cudaEventRecord( forwardPropComplete, stream1 ) );
+    cudaErrorCheck( cudaStreamWaitEvent( stream2, forwardPropComplete, 0 ) );
 }
 
 void NeuralNetwork::backProp( const float learningParam )
@@ -98,11 +143,17 @@ void NeuralNetwork::backProp( const float learningParam )
     for (unsigned int i = numHiddenLayers; i > 0; i--)
     {
         printf( "layer %d: back propagate ...\n", i );
+        cublasErrorCheck( cublasSetStream( cublasHandle, stream2 ) );
         layerArr[i - 1].backPropError(
             layerArr[i].getDErrorPtr(),
             layerArr[i].getDWeightPtr(),
-            layerArr[i].getNumFeaturesOut() );
+            layerArr[i].getNumFeaturesOut(),
+            stream2 );
+        cudaErrorCheck( cudaEventRecord( backPropCompletes[i - 1], stream2 ) );
+
         printf( "layer %d: update weights ...\n", i );
+        cudaErrorCheck( cudaStreamWaitEvent( stream1, backPropCompletes[i - 1], 0 ) );
+        cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
         layerArr[i].updateWeights(
             layerArr[i - 1].getDOutputPtr(),
             learningParam );

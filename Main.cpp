@@ -6,7 +6,7 @@
 int main()
 {
     ArffImporter trainSetImporter;
-    trainSetImporter.Read( "Dataset/train/train-first50.arff" );
+    trainSetImporter.Read( "Dataset/train/train-first1000.arff" );
 
     // ArffImporter testSetImporter;
     // testSetImporter.Read( "Dataset/test/dev-first1000.arff" );
@@ -16,24 +16,35 @@ int main()
     cublasErrorCheck( cublasCreate( &cublasHandle ) );
 
     // Number of layers excluding input layer
-    const unsigned int numLayers = 2;
+    const unsigned int numLayers = 3;
     unsigned int architecture[numLayers + 1];
     // Number of features in each layer including input layer
     architecture[0] = trainSetImporter.GetNumFeatures();
-    architecture[1] = 11;
-    architecture[2] = 1;
+    architecture[1] = 501;
+    architecture[2] = 51;
+    architecture[3] = 1;
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         trainSetImporter.GetNumInstances(),
         numLayers,
         architecture,
         cublasHandle );
+
+    time_t start, end;
+    double dif;
+    time( &start );
+
     neuralNetwork.train(
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndex(),
-        2000,
+        200,
         0.2f,
         1.0f );
+
+    time( &end );
+    dif = difftime( end, start );
+    printf( "Time taken: %.2lf seconds.\n", dif );
+
     // neuralNetwork.Classify(
     //     testSetImporter.GetInstances(),
     //     testSetImporter.GetNumInstances() );
