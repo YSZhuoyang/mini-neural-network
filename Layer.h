@@ -76,8 +76,8 @@ private:
     dim3 sigGridDim;
     dim3 ccBlockDim;
     dim3 ccGridDim;
-    dim3 artBlockDim;
-    dim3 artGridDim;
+    dim3 uwBlockDim;
+    dim3 uwGridDim;
     cublasHandle_t cublasHandle;
 };
 
