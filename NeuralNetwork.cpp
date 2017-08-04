@@ -51,6 +51,7 @@ void NeuralNetwork::train(
     const unsigned short* classIndexVec,
     const unsigned int maxIter,
     const float learningRate,
+    const float regularParam,
     const float costThreshold )
 {
     this->classIndexVec = classIndexVec;
@@ -74,7 +75,7 @@ void NeuralNetwork::train(
     while (iter++ < maxIter)
     {
         forwardProp();
-        backProp( learningParam );
+        backProp( learningParam, regularParam );
 
         printf( "\n" );
     }
@@ -112,7 +113,9 @@ void NeuralNetwork::forwardProp()
     layerArr[numHiddenLayers].computeOutputLayerError( dClassIndexVec, classIndexVec );
 }
 
-void NeuralNetwork::backProp( const float learningParam )
+void NeuralNetwork::backProp(
+    const float learningParam,
+    const float regularParam )
 {
     // Backword propagation
     for (unsigned int i = numHiddenLayers; i > 0; i--)
@@ -125,11 +128,13 @@ void NeuralNetwork::backProp( const float learningParam )
         printf( "layer %d: update weights ...\n", i );
         layerArr[i].updateWeights(
             layerArr[i - 1].getDOutputPtr(),
-            learningParam );
+            learningParam,
+            regularParam );
     }
 
     printf( "layer 0: update weights ...\n" );
     layerArr[0].updateWeights(
         dFeatureMat,
-        learningParam );
+        learningParam,
+        regularParam );
 }

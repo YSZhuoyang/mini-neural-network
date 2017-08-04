@@ -32,7 +32,8 @@ public:
         const unsigned int numNextLayerFeasOut );
     void updateWeights(
         const float* dInputMat,
-        const float learningParam );
+        const float learningParam,
+        const float regularParam );
     void computeOutputLayerError(
         const unsigned short* dClassIndexVec,
         const unsigned short* classIndexVec );
@@ -70,6 +71,8 @@ private:
     dim3 sigGridDim;
     dim3 ccBlockDim;
     dim3 ccGridDim;
+    dim3 artBlockDim;
+    dim3 artGridDim;
     cublasHandle_t cublasHandle;
 };
 
