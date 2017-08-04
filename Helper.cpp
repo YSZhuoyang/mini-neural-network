@@ -129,24 +129,34 @@ void MyHelper::cublasErrorCheck( cublasStatus_t cublasStatus )
         {
             case CUBLAS_STATUS_NOT_INITIALIZED:
                 printf( "CUBLAS_STATUS_NOT_INITIALIZED\n" );
+                break;
 
             case CUBLAS_STATUS_ALLOC_FAILED:
                 printf( "CUBLAS_STATUS_ALLOC_FAILED\n" );
+                break;
 
             case CUBLAS_STATUS_INVALID_VALUE:
                 printf( "CUBLAS_STATUS_INVALID_VALUE\n" );
+                break;
 
             case CUBLAS_STATUS_ARCH_MISMATCH:
                 printf( "CUBLAS_STATUS_ARCH_MISMATCH\n" );
+                break;
 
             case CUBLAS_STATUS_MAPPING_ERROR:
                 printf( "CUBLAS_STATUS_MAPPING_ERROR\n" );
+                break;
 
             case CUBLAS_STATUS_EXECUTION_FAILED:
                 printf( "CUBLAS_STATUS_EXECUTION_FAILED\n" );
+                break;
 
             case CUBLAS_STATUS_INTERNAL_ERROR:
                 printf( "CUBLAS_STATUS_INTERNAL_ERROR\n" );
+                break;
+            
+            default:
+                break;
         }
     }
 }
