@@ -43,10 +43,8 @@ void Layer::init(
     errorMat = (float*) malloc( numInstances * numNodes * sizeof( float ) );
 
     // Inie weight matrix
-    for (unsigned int i = 0; i < numNodes; i++)
-        for (unsigned int j = 0; j < numFeaturesIn; j++)
-            weightMat[i * numFeaturesIn + j] = 1.0f;
-                // 0.1f * (float) ((i * numFeaturesIn + j) % 10);
+    for (unsigned int i = 0; i < numNodes * numFeaturesIn; i++)
+        weightMat[i] = ((float) (rand() % 101) - 50.0f) / 50.0f;
 }
 
 float* Layer::forwardOutput( const float* inputMat )
@@ -113,14 +111,14 @@ void Layer::updateWeights(
                 sum += inputMat[numFeaturesIn * i + idIn] *
                     errorMat[numNodes * i + idNode];
             weightMat[numFeaturesIn * idNode + idIn] -=
-                learningRate / (float) numInstances * sum;
+                learningRate / (float) numInstances * (sum + 0.1f * weightMat[numFeaturesIn * idNode + idIn]);
         }
 
-    float sum = 0.0f;
-    for (int i = 0; i < numNodes; i++)
-        for (int j = 0; j < numFeaturesIn; j++)
-            sum += weightMat[i * numFeaturesIn + j];
-    printf( "Back propagate completed, Weight sum: %f\n", sum );
+    // float sum = 0.0f;
+    // for (int i = 0; i < numNodes; i++)
+    //     for (int j = 0; j < numFeaturesIn; j++)
+    //         sum += weightMat[i * numFeaturesIn + j];
+    // printf( "Back propagate completed, Weight sum: %f\n", sum );
 }
 
 void Layer::computeOutputLayerError( const unsigned short* classIndexVec )

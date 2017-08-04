@@ -11,17 +11,17 @@ int main()
     // ArffImporter testSetImporter;
     // testSetImporter.Read( "Dataset/test/dev-first1000.arff" );
 
-    const unsigned int architecture[4] = { 51, 11, 1 };
+    const unsigned int architecture[4] = { 51, 51, 51, 1 };
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         trainSetImporter.GetNumInstances(),
-        2,
+        3,
         architecture );
     neuralNetwork.train(
         trainSetImporter.GetFeatureMat(),
         trainSetImporter.GetClassIndex(),
-        1,
-        0.1f,
+        10,
+        0.2f,
         1.0f );
     // neuralNetwork.Classify(
     //     testSetImporter.GetInstances(),
