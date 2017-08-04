@@ -69,6 +69,7 @@ void NeuralNetwork::train(
     const unsigned short* classIndexVec,
     const unsigned int maxIter,
     const float learningRate,
+    const float regularParam,
     const float costThreshold )
 {
     this->classIndexVec = classIndexVec;
@@ -87,13 +88,13 @@ void NeuralNetwork::train(
         numInstances * sizeof( unsigned short ),
         cudaMemcpyHostToDevice ) );
 
+    cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
     float learningParam = -learningRate / (float) numInstances;
     unsigned int iter = 0;
-    cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
     while (iter++ < maxIter)
     {
         forwardProp();
-        backProp( learningParam );
+        backProp( learningParam, regularParam );
 
         printf( "\n" );
     }
@@ -137,7 +138,9 @@ void NeuralNetwork::forwardProp()
     cudaErrorCheck( cudaStreamWaitEvent( stream2, forwardPropComplete, 0 ) );
 }
 
-void NeuralNetwork::backProp( const float learningParam )
+void NeuralNetwork::backProp(
+    const float learningParam,
+    const float regularParam )
 {
     // Backword propagation
     for (unsigned int i = numHiddenLayers; i > 0; i--)
@@ -156,11 +159,15 @@ void NeuralNetwork::backProp( const float learningParam )
         cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
         layerArr[i].updateWeights(
             layerArr[i - 1].getDOutputPtr(),
-            learningParam );
+            learningParam,
+            regularParam,
+            stream1 );
     }
 
     printf( "layer 0: update weights ...\n" );
     layerArr[0].updateWeights(
         dFeatureMat,
-        learningParam );
+        learningParam,
+        regularParam,
+        stream1 );
 }

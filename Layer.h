@@ -39,7 +39,9 @@ public:
         cudaStream_t stream );
     void updateWeights(
         const float* dInputMat,
-        const float learningParam );
+        const float learningParam,
+        const float regularParam,
+        cudaStream_t stream );
     float* getOutputPtr();
     float* getErrorPtr();
     float* getWeightPtr();
@@ -74,6 +76,8 @@ private:
     dim3 sigGridDim;
     dim3 ccBlockDim;
     dim3 ccGridDim;
+    dim3 artBlockDim;
+    dim3 artGridDim;
     cublasHandle_t cublasHandle;
 };
 

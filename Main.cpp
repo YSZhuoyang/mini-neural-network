@@ -38,6 +38,7 @@ int main()
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndex(),
         200,
+        0.2f,
         0.1f,
         1.0f );
 

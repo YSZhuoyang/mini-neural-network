@@ -23,11 +23,14 @@ public:
         const unsigned short* classIndexVec,
         const unsigned int maxIter,
         const float learningRate,
+        const float regularParam,
         const float costThreshold );
 
 private:
     void forwardProp();
-    void backProp( const float learningParam );
+    void backProp(
+        const float learningParam,
+        const float regularParam );
 
     // To be deleted
     const unsigned short* classIndexVec = nullptr;

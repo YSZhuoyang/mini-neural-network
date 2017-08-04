@@ -41,6 +41,20 @@ __global__ void BackPropError(
     dErrorMat[eleId] *= error;
 }
 
+__global__ void AddRegularizationTerm(
+    float* __restrict__ dDeltaWeightMat,
+    const float* __restrict__ dWeightMat,
+    const float regularParam,
+    const unsigned int numFeaturesIn,
+    const unsigned int weightMatSize )
+{
+    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    // Exclude bias term
+    if (eleId >= weightMatSize || eleId % numFeaturesIn == 0) return;
+
+    dDeltaWeightMat[eleId] += regularParam * dWeightMat[eleId];
+}
+
 
 Layer::Layer()
 {
@@ -52,10 +66,10 @@ Layer::~Layer()
     free( weightMat );
     free( outputMat );
     free( errorMat );
-    cudaFree( dWeightMat );
-    cudaFree( dDeltaWeightMat );
-    cudaFree( dOutputMat );
-    cudaFree( dErrorMat );
+    cudaErrorCheck( cudaFree( dWeightMat ) );
+    cudaErrorCheck( cudaFree( dDeltaWeightMat ) );
+    cudaErrorCheck( cudaFree( dOutputMat ) );
+    cudaErrorCheck( cudaFree( dErrorMat ) );
     weightMat = nullptr;
     dDeltaWeightMat = nullptr;
     outputMat = nullptr;
@@ -121,6 +135,13 @@ void Layer::init(
         sigGridDim.x = (errorMatSize + NUM_BLOCK_THREADS - 1) / NUM_BLOCK_THREADS;
     }
     else sigBlockDim.x = errorMatSize;
+
+    if (weightMatSize > NUM_BLOCK_THREADS)
+    {
+        artBlockDim.x = NUM_BLOCK_THREADS;
+        artGridDim.x = (weightMatSize + NUM_BLOCK_THREADS - 1) / NUM_BLOCK_THREADS;
+    }
+    else artBlockDim.x = weightMatSize;
 
     // Allocate device memo
     cudaErrorCheck( cudaMalloc( (void**) &dWeightMat, weightMatSize * sizeof( float ) ) );
@@ -262,7 +283,9 @@ void Layer::computeOutputLayerError(
 
 void Layer::updateWeights(
     const float* dInputMat,
-    const float learningParam )
+    const float learningParam,
+    const float regularParam,
+    cudaStream_t stream )
 {
     const float alpha = 1.0f;
     const float beta = 0.0f;
@@ -283,6 +306,14 @@ void Layer::updateWeights(
         &beta,
         dDeltaWeightMat,
         numFeaturesIn ) );
+    // Add regularization term
+    AddRegularizationTerm<<< artGridDim, artBlockDim, 0, stream >>>(
+        dDeltaWeightMat,
+        dWeightMat,
+        regularParam,
+        numFeaturesIn,
+        weightMatSize );
+    cudaErrorCheck( cudaGetLastError() );
     // Update weight mat
     cublasErrorCheck( cublasSaxpy(
         cublasHandle,
