@@ -22,6 +22,7 @@ int main()
         trainSetImporter.GetClassIndex(),
         10,
         0.2f,
+        0.1f,
         1.0f );
     // neuralNetwork.Classify(
     //     testSetImporter.GetInstances(),

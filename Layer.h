@@ -29,7 +29,8 @@ public:
         const float* inputMat );
     void updateWeights(
         const float* inputMat,
-        const float learningRate );
+        const float learningParam,
+        const float regularParam );
     void computeOutputLayerError( const unsigned short* classIndexVec );
 
 

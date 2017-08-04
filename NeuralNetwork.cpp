@@ -20,6 +20,7 @@ void NeuralNetwork::initLayers(
     const unsigned int* architecture )
 {
     this->numLayers = numLayers;
+    this->numInstances = numInstances;
     numHiddenLayers = numLayers - 1;
     layerArr = new Layer[numLayers];
 
@@ -42,13 +43,15 @@ void NeuralNetwork::train(
     const unsigned short* classIndexVec,
     const unsigned int maxIter,
     const float learningRate,
+    const float regularParam,
     const float costThreshold )
 {
     unsigned int iter = 0;
+    float learningParam = -learningRate / (float) numInstances;
     while (iter++ < maxIter)
     {
         forwardProp( featureMat, classIndexVec );
-        backProp( featureMat, learningRate );
+        backProp( featureMat, learningParam, regularParam );
 
         printf( "\n" );
     }
@@ -71,7 +74,8 @@ void NeuralNetwork::forwardProp(
 
 void NeuralNetwork::backProp(
     const float* featureMat,
-    const float learningRate )
+    const float learningParam,
+    const float regularParam )
 {
     // Backword propagation
     for (unsigned int i = numHiddenLayers; i > 0; i--)
@@ -83,7 +87,8 @@ void NeuralNetwork::backProp(
         printf( "layer: %d update weights ...\n", i );
         layerArr[i].updateWeights(
             layerArr[i - 1].getOutputPtr(),
-            learningRate );
+            learningParam,
+            regularParam );
         // printf( "Weight: %f\n", layerArr[i].getWeightPtr()[0] );
 
         // float sum = 0.0f;
@@ -96,7 +101,8 @@ void NeuralNetwork::backProp(
     printf( "layer: 0 update weights ...\n" );
     layerArr[0].updateWeights(
         featureMat,
-        learningRate );
+        learningParam,
+        regularParam );
     // printf( "Weight: %f\n", layerArr[0].getWeightPtr()[0] );
 
     // float sum = 0.0f;

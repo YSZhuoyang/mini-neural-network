@@ -101,7 +101,8 @@ void Layer::backPropError(
 
 void Layer::updateWeights(
     const float* inputMat,
-    const float learningRate )
+    const float learningParam,
+    const float regularParam )
 {
     for (unsigned int idNode = 0; idNode < numNodes; idNode++)
         for (unsigned int idIn = 0; idIn < numFeaturesIn; idIn++)
@@ -110,8 +111,9 @@ void Layer::updateWeights(
             for (unsigned int i = 0; i < numInstances; i++)
                 sum += inputMat[numFeaturesIn * i + idIn] *
                     errorMat[numNodes * i + idNode];
-            weightMat[numFeaturesIn * idNode + idIn] -=
-                learningRate / (float) numInstances * (sum + 0.1f * weightMat[numFeaturesIn * idNode + idIn]);
+            if (idIn != 0)
+                sum += regularParam * weightMat[numFeaturesIn * idNode + idIn];
+            weightMat[numFeaturesIn * idNode + idIn] += learningParam * sum;
         }
 
     // float sum = 0.0f;

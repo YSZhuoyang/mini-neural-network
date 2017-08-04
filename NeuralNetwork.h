@@ -22,6 +22,7 @@ public:
         const unsigned short* classIndexVec,
         const unsigned int maxIter,
         const float learningRate,
+        const float regularParam,
         const float costThreshold );
 
 private:
@@ -30,12 +31,14 @@ private:
         const unsigned short* classIndexVec );
     void backProp(
         const float* featureMat,
-        const float learningRate );
+        const float learningParam,
+        const float regularParam );
 
     // Does not include input layer
+    Layer* layerArr                = nullptr;
+    unsigned int numInstances      = 0;
     unsigned short numLayers       = 0;
     unsigned short numHiddenLayers = 0;
-    Layer* layerArr                = nullptr;
 };
 
 #endif
