@@ -41,19 +41,21 @@ __global__ void BackPropError(
     dErrorMat[eleId] *= error;
 }
 
-
-__global__ void AddRegularizationTerm(
-    float* __restrict__ dDeltaWeightMat,
-    const float* __restrict__ dWeightMat,
+__global__ void UpdateWeightMat(
+    float* __restrict__ dWeightMat,
+    const float* __restrict__ dDeltaWeightMat,
+    const float learningParam,
     const float regularParam,
     const unsigned int numFeaturesIn,
     const unsigned int weightMatSize )
 {
     unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
-    // Exclude bias term
-    if (eleId >= weightMatSize || eleId % numFeaturesIn == 0) return;
+    if (eleId >= weightMatSize) return;
 
-    dDeltaWeightMat[eleId] += regularParam * dWeightMat[eleId];
+    // Add regularization term excluding bias term
+    float regularTerm = (eleId % numFeaturesIn == 0) ?
+        0.0f : regularParam * dWeightMat[eleId];
+    dWeightMat[eleId] += learningParam * (dDeltaWeightMat[eleId] + regularTerm);
 }
 
 
@@ -139,10 +141,10 @@ void Layer::init(
 
     if (weightMatSize > NUM_BLOCK_THREADS)
     {
-        artBlockDim.x = NUM_BLOCK_THREADS;
-        artGridDim.x = (weightMatSize + NUM_BLOCK_THREADS - 1) / NUM_BLOCK_THREADS;
+        uwBlockDim.x = NUM_BLOCK_THREADS;
+        uwGridDim.x = (weightMatSize + NUM_BLOCK_THREADS - 1) / NUM_BLOCK_THREADS;
     }
-    else artBlockDim.x = weightMatSize;
+    else uwBlockDim.x = weightMatSize;
 
     // Allocate device memo
     cudaErrorCheck( cudaMalloc( (void**) &dWeightMat, weightMatSize * sizeof( float ) ) );
@@ -268,23 +270,23 @@ void Layer::updateWeights(
         &beta,
         dDeltaWeightMat,
         numFeaturesIn ) );
-    // Add regularization term
-    AddRegularizationTerm<<< artGridDim, artBlockDim >>>(
-        dDeltaWeightMat,
+    // Update weight mat
+    UpdateWeightMat<<< uwGridDim, uwBlockDim >>>(
         dWeightMat,
+        dDeltaWeightMat,
+        learningParam,
         regularParam,
         numFeaturesIn,
         weightMatSize );
     cudaErrorCheck( cudaGetLastError() );
-    // Update weight mat
-    cublasErrorCheck( cublasSaxpy(
-        cublasHandle,
-        weightMatSize,
-        &learningParam,
-        dDeltaWeightMat,
-        1,
-        dWeightMat,
-        1 ) );
+    // cublasErrorCheck( cublasSaxpy(
+    //     cublasHandle,
+    //     weightMatSize,
+    //     &learningParam,
+    //     dDeltaWeightMat,
+    //     1,
+    //     dWeightMat,
+    //     1 ) );
 
     // Copy from device to host
     // For testing gradient descent
