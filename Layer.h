@@ -34,8 +34,8 @@ public:
         const unsigned int numNextLayerFeasOut,
         cudaStream_t stream );
     void computeOutputLayerError(
-        const unsigned short* dClassIndexVec,
-        const unsigned short* classIndexVec,
+        const unsigned short* dClassIndexMat,
+        const unsigned short* classIndexMat,
         cudaStream_t stream );
     void updateWeights(
         const float* dInputMat,

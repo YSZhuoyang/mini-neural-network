@@ -17,7 +17,7 @@ __global__ void Sigmid(
 __global__ void ComputeOutputLayerError(
     float* __restrict__ dErrorMat,
     float* __restrict__ dOutputMat,
-    const unsigned short* __restrict__ dClassIndexVec,
+    const unsigned short* __restrict__ dClassIndexMat,
     const unsigned int errorMatSize )
 {
     unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
@@ -26,7 +26,7 @@ __global__ void ComputeOutputLayerError(
     float output = dOutputMat[eleId];
     // For testing
     dOutputMat[eleId] = output;
-    dErrorMat[eleId] = output - (float) dClassIndexVec[eleId];
+    dErrorMat[eleId] = output - (float) dClassIndexMat[eleId];
 }
 
 __global__ void BackPropError(
@@ -250,8 +250,8 @@ void Layer::backPropError(
 }
 
 void Layer::computeOutputLayerError(
-    const unsigned short* dClassIndexVec,
-    const unsigned short* classIndexVec,
+    const unsigned short* dClassIndexMat,
+    const unsigned short* classIndexMat,
     cudaStream_t stream )
 {
     if (layerType != OUTPUT_LAYER)
@@ -263,7 +263,7 @@ void Layer::computeOutputLayerError(
     ComputeOutputLayerError<<< ccGridDim, ccBlockDim, 0, stream >>>(
         dErrorMat,
         dOutputMat,
-        dClassIndexVec,
+        dClassIndexMat,
         errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
 
@@ -276,10 +276,9 @@ void Layer::computeOutputLayerError(
     //     cudaMemcpyDeviceToHost ) );
 
     // float costSum = 0.0f;
-    // for (unsigned int i = 0; i < numInstances; i++)
-    //     for (unsigned int j = 0; j < numNodes; j++)
-    //         costSum -= (classIndexVec[i]) ?
-    //             logf(outputMat[i * numNodes + j]) : logf(1.0f - outputMat[i * numNodes + j]);
+    // for (unsigned int i = 0; i < outputMatSize; i++)
+    //     costSum -= (classIndexMat[i]) ?
+    //         logf(outputMat[i]) : logf(1.0f - outputMat[i]);
 
     // printf( "Cost: %f\n", costSum );
 }

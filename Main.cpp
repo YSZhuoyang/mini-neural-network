@@ -17,12 +17,13 @@ int main()
 
     // Number of layers excluding input layer
     const unsigned int numLayers = 3;
+    const unsigned int numClasses = trainSetImporter.GetNumClasses();
     unsigned int architecture[numLayers + 1];
     // Number of features in each layer including input layer
     architecture[0] = trainSetImporter.GetNumFeatures();
     architecture[1] = 501;
     architecture[2] = 51;
-    architecture[3] = 1;
+    architecture[3] = (numClasses == 2) ? 1 : numClasses;
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         trainSetImporter.GetNumInstances(),
@@ -36,7 +37,7 @@ int main()
 
     neuralNetwork.train(
         trainSetImporter.GetFeatureMatTrans(),
-        trainSetImporter.GetClassIndex(),
+        trainSetImporter.GetClassIndexMat(),
         200,
         0.2f,
         0.1f,

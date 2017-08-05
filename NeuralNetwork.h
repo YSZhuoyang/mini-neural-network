@@ -20,7 +20,7 @@ public:
         cublasHandle_t cublasHandle );
     void train(
         const float* featureMat,
-        const unsigned short* classIndexVec,
+        const unsigned short* classIndexMat,
         const unsigned int maxIter,
         const float learningRate,
         const float regularParam,
@@ -33,10 +33,10 @@ private:
         const float regularParam );
 
     // To be deleted
-    const unsigned short* classIndexVec = nullptr;
+    const unsigned short* classIndexMat = nullptr;
     // Does not include input layer
     float* dFeatureMat               = nullptr;
-    unsigned short* dClassIndexVec   = nullptr;
+    unsigned short* dClassIndexMat   = nullptr;
     // Number of features in each layer including input layer
     const unsigned int* architecture = nullptr;
     Layer* layerArr                  = nullptr;
