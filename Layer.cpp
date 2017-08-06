@@ -68,7 +68,7 @@ __global__ void ComputeCost(
     if (eleId >= costMatSize) return;
 
     dCostMat[eleId] = (dClassIndexMat[eleId]) ?
-        logf(dOutputMat[eleId]) : logf(1.0f - dOutputMat[eleId]);
+        -logf(dOutputMat[eleId]) : -logf(1.0f - dOutputMat[eleId]);
 }
 
 
