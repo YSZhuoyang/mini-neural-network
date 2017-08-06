@@ -19,12 +19,12 @@ public:
     ~Layer();
 
     void init(
-        const unsigned int numInstances,
         const unsigned int numFeaturesIn,
         const unsigned int numFeaturesOut,
         // Determine wether X0 for bias is included in output features
         const unsigned short layerType,
         cublasHandle_t cublasHandle );
+    void initOutputBuffers( const unsigned int numInstances );
     float* forwardOutput(
         const float* dInputMat,
         cudaStream_t stream );
@@ -71,7 +71,6 @@ private:
     unsigned int weightMatSize  = 0;
     unsigned int errorMatSize   = 0;
     unsigned int outputMatSize  = 0;
-    unsigned int inputMatSize   = 0;
     unsigned int layerType      = 0;
     // Kernel config
     dim3 sigBlockDim;
