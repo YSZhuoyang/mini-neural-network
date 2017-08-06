@@ -32,10 +32,9 @@ private:
         const float learningParam,
         const float regularParam );
 
-    // To be deleted
-    const unsigned short* classIndexMat = nullptr;
     // Does not include input layer
     float* dFeatureMat               = nullptr;
+    float* dCostMat                  = nullptr;
     unsigned short* dClassIndexMat   = nullptr;
     // Number of features in each layer including input layer
     const unsigned int* architecture = nullptr;
@@ -45,7 +44,7 @@ private:
     unsigned short numLayers         = 0;
     unsigned short numHiddenLayers   = 0;
 
-    cudaEvent_t* backPropCompletes      = nullptr;
+    cudaEvent_t* backPropCompletes   = nullptr;
     cudaEvent_t forwardPropComplete;
     cudaStream_t stream1;
     cudaStream_t stream2;

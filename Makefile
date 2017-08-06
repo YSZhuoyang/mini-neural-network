@@ -12,7 +12,7 @@ SHELL = /bin/sh
 
 # Enable Nvidia gpu
 NVCC = nvcc
-NVCCCFLAGS = -arch=sm_50 -std=c++11 -O3 -use_fast_math -lcublas
+NVCCCFLAGS = -arch=sm_50 -std=c++11 -O3 -lcublas
 CUFLAGS = -x cu
 OBJECTS = Helper.o ArffImporter.o Layer.o NeuralNetwork.o Main.o
 

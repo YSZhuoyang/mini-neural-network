@@ -14,6 +14,18 @@ __global__ void Sigmid(
     dOutputMatOffset[eleId] = 1.0f / (1.0f + expf(-output));
 }
 
+__global__ void BackPropError(
+    float* __restrict__ dErrorMat,
+    const float* __restrict__ dOutputMatOffset,
+    const unsigned int errorMatSize )
+{
+    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    if (eleId >= errorMatSize) return;
+
+    float error = dOutputMatOffset[eleId] * (1.0f - dOutputMatOffset[eleId]);
+    dErrorMat[eleId] *= error;
+}
+
 __global__ void ComputeOutputLayerError(
     float* __restrict__ dErrorMat,
     float* __restrict__ dOutputMat,
@@ -27,18 +39,6 @@ __global__ void ComputeOutputLayerError(
     // For testing
     dOutputMat[eleId] = output;
     dErrorMat[eleId] = output - (float) dClassIndexMat[eleId];
-}
-
-__global__ void BackPropError(
-    float* __restrict__ dErrorMat,
-    const float* __restrict__ dOutputMatOffset,
-    const unsigned int errorMatSize )
-{
-    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
-    if (eleId >= errorMatSize) return;
-
-    float error = dOutputMatOffset[eleId] * (1.0f - dOutputMatOffset[eleId]);
-    dErrorMat[eleId] *= error;
 }
 
 __global__ void UpdateWeightMat(
@@ -56,6 +56,19 @@ __global__ void UpdateWeightMat(
     float regularTerm = (eleId % numFeaturesIn == 0) ?
         0.0f : regularParam * dWeightMat[eleId];
     dWeightMat[eleId] += learningParam * (dDeltaWeightMat[eleId] + regularTerm);
+}
+
+__global__ void ComputeCost(
+    float* __restrict__ dCostMat,
+    const float* __restrict__ dOutputMat,
+    const unsigned short* __restrict__ dClassIndexMat,
+    const unsigned int costMatSize )
+{
+    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    if (eleId >= costMatSize) return;
+
+    dCostMat[eleId] = (dClassIndexMat[eleId]) ?
+        logf(dOutputMat[eleId]) : logf(1.0f - dOutputMat[eleId]);
 }
 
 
@@ -251,12 +264,11 @@ void Layer::backPropError(
 
 void Layer::computeOutputLayerError(
     const unsigned short* dClassIndexMat,
-    const unsigned short* classIndexMat,
     cudaStream_t stream )
 {
     if (layerType != OUTPUT_LAYER)
     {
-        printf( "computeOutputLayerError() can only be ran by output layer.\n" );
+        printf( "computeOutputLayerError() can only be called by output layer.\n" );
         return;
     }
 
@@ -267,19 +279,10 @@ void Layer::computeOutputLayerError(
         errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
 
-    // Copy from device to host
+    // Sum up cost
     // For testing gradient descent
-    // cudaErrorCheck( cudaMemcpy(
-    //     outputMat,
-    //     dOutputMat,
-    //     outputMatSize * sizeof( float ),
-    //     cudaMemcpyDeviceToHost ) );
-
-    // float costSum = 0.0f;
-    // for (unsigned int i = 0; i < outputMatSize; i++)
-    //     costSum -= (classIndexMat[i]) ?
-    //         logf(outputMat[i]) : logf(1.0f - outputMat[i]);
-
+    // float costSum =
+    //     layerArr[numHiddenLayers].computeCost( dClassIndexMat, dCostMat, stream1 );
     // printf( "Cost: %f\n", costSum );
 }
 
@@ -333,6 +336,34 @@ void Layer::updateWeights(
     // printf( "Back propagate completed, weight sum: %f\n", sum );
 }
 
+float Layer::computeCost(
+    const unsigned short* dClassIndexMat,
+    float* dCostMat,
+    cudaStream_t stream )
+{
+    if (layerType != OUTPUT_LAYER)
+    {
+        printf( "computeCost() can only be called by output layer.\n" );
+        return 0.0f;
+    }
+
+    float costSum = 0.0f;
+    ComputeCost<<< sigGridDim, sigBlockDim, 0, stream >>>(
+        dCostMat,
+        dOutputMat,
+        dClassIndexMat,
+        outputMatSize );
+    cudaErrorCheck( cudaGetLastError() );
+    cublasErrorCheck( cublasSasum(
+        cublasHandle,
+        outputMatSize,
+        dCostMat,
+        1,
+        &costSum ) );
+    
+    return costSum;
+}
+
 float* Layer::getDWeightPtr()
 {
     return dWeightMat;
@@ -361,9 +392,4 @@ float* Layer::getOutputPtr()
 float* Layer::getErrorPtr()
 {
     return errorMat;
-}
-
-unsigned int Layer::getNumFeaturesOut()
-{
-    return numFeaturesOut;
 }

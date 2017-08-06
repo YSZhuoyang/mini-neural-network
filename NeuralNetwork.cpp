@@ -23,8 +23,10 @@ NeuralNetwork::~NeuralNetwork()
 
     cudaErrorCheck( cudaFree( dFeatureMat ) );
     cudaErrorCheck( cudaFree( dClassIndexMat ) );
+    cudaErrorCheck( cudaFree( dCostMat ) );
     dFeatureMat = nullptr;
     dClassIndexMat = nullptr;
+    dCostMat = nullptr;
 }
 
 
@@ -58,10 +60,15 @@ void NeuralNetwork::initLayers(
 
     cudaErrorCheck( cudaStreamCreate( &stream1 ) );
     cudaErrorCheck( cudaStreamCreate( &stream2 ) );
-    cudaErrorCheck( cudaEventCreateWithFlags( &forwardPropComplete, cudaEventDisableTiming ) );
-    backPropCompletes = (cudaEvent_t*) malloc( numHiddenLayers * sizeof( cudaEvent_t ) );
+    cudaErrorCheck( cudaEventCreateWithFlags(
+        &forwardPropComplete,
+        cudaEventDisableTiming ) );
+    backPropCompletes =
+        (cudaEvent_t*) malloc( numHiddenLayers * sizeof( cudaEvent_t ) );
     for (unsigned int i = 0; i < numHiddenLayers; i++)
-        cudaErrorCheck( cudaEventCreateWithFlags( &backPropCompletes[i], cudaEventDisableTiming ) );
+        cudaErrorCheck( cudaEventCreateWithFlags(
+            &backPropCompletes[i],
+            cudaEventDisableTiming ) );
 }
 
 void NeuralNetwork::train(
@@ -72,12 +79,18 @@ void NeuralNetwork::train(
     const float regularParam,
     const float costThreshold )
 {
-    this->classIndexMat = classIndexMat;
     const unsigned int trainFeatureMatSize = numInstances * architecture[0];
     const unsigned int classIndexMatSize = numInstances * architecture[numLayers];
     // Allocate device memo for training data
-    cudaErrorCheck( cudaMalloc( (void**) &dFeatureMat, trainFeatureMatSize * sizeof( float ) ) );
-    cudaErrorCheck( cudaMalloc( (void**) &dClassIndexMat, classIndexMatSize * sizeof( unsigned short ) ) );
+    cudaErrorCheck( cudaMalloc(
+        (void**) &dFeatureMat,
+        trainFeatureMatSize * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc(
+        (void**) &dCostMat,
+        classIndexMatSize * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc(
+        (void**) &dClassIndexMat,
+        classIndexMatSize * sizeof( unsigned short ) ) );
     cudaErrorCheck( cudaMemcpyAsync(
         dFeatureMat,
         featureMat,
@@ -100,25 +113,10 @@ void NeuralNetwork::train(
         printf( "\n" );
     }
 
-    // Copy from device to host
-    // For testing gradient descent
-    float* outputMat = layerArr[numHiddenLayers].getOutputPtr();
-    const float* dOutputMat = layerArr[numHiddenLayers].getDOutputPtr();
-    const unsigned int outputMatSize = architecture[numLayers] * numInstances;
-    cudaErrorCheck( cudaMemcpy(
-        outputMat,
-        dOutputMat,
-        outputMatSize * sizeof( float ),
-        cudaMemcpyDeviceToHost ) );
-
-    // Compute device cost matrix ...
-
-
     // Sum up cost
-    float costSum = 0.0f;
-    for (unsigned int i = 0; i < outputMatSize; i++)
-        costSum -= (classIndexMat[i]) ?
-            logf(outputMat[i]) : logf(1.0f - outputMat[i]);
+    float costSum =
+        layerArr[numHiddenLayers].computeCost( dClassIndexMat, dCostMat, stream1 );
+    // cudaErrorCheck( cudaStreamSynchronize( stream1 ) );
 
     printf( "Cost: %f\n", costSum );
 }
@@ -134,7 +132,6 @@ void NeuralNetwork::forwardProp()
     }
     layerArr[numHiddenLayers].computeOutputLayerError(
         dClassIndexMat,
-        classIndexMat,
         stream1 );
 
     cudaErrorCheck( cudaEventRecord( forwardPropComplete, stream1 ) );
@@ -153,7 +150,7 @@ void NeuralNetwork::backProp(
         layerArr[i - 1].backPropError(
             layerArr[i].getDErrorPtr(),
             layerArr[i].getDWeightPtr(),
-            layerArr[i].getNumFeaturesOut(),
+            architecture[i + 1],
             stream2 );
         cudaErrorCheck( cudaEventRecord( backPropCompletes[i - 1], stream2 ) );
 

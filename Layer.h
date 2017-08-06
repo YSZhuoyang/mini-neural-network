@@ -35,12 +35,15 @@ public:
         cudaStream_t stream );
     void computeOutputLayerError(
         const unsigned short* dClassIndexMat,
-        const unsigned short* classIndexMat,
         cudaStream_t stream );
     void updateWeights(
         const float* dInputMat,
         const float learningParam,
         const float regularParam,
+        cudaStream_t stream );
+    float computeCost(
+        const unsigned short* dClassIndexMat,
+        float* dCostMat,
         cudaStream_t stream );
     float* getOutputPtr();
     float* getErrorPtr();
@@ -48,7 +51,6 @@ public:
     float* getDWeightPtr();
     float* getDOutputPtr();
     float* getDErrorPtr();
-    unsigned int getNumFeaturesOut();
 
 
 private:
