@@ -337,8 +337,8 @@ void Layer::updateWeights(
 }
 
 float Layer::computeCost(
-    const unsigned short* dClassIndexMat,
     float* dCostMat,
+    const unsigned short* dClassIndexMat,
     cudaStream_t stream )
 {
     if (layerType != OUTPUT_LAYER)

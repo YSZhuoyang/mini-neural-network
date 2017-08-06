@@ -115,7 +115,7 @@ void NeuralNetwork::train(
 
     // Sum up cost
     float costSum =
-        layerArr[numHiddenLayers].computeCost( dClassIndexMat, dCostMat, stream1 );
+        layerArr[numHiddenLayers].computeCost( dCostMat, dClassIndexMat, stream1 );
     // cudaErrorCheck( cudaStreamSynchronize( stream1 ) );
 
     printf( "Cost: %f\n", costSum );

@@ -42,8 +42,8 @@ public:
         const float regularParam,
         cudaStream_t stream );
     float computeCost(
-        const unsigned short* dClassIndexMat,
         float* dCostMat,
+        const unsigned short* dClassIndexMat,
         cudaStream_t stream );
     float* getOutputPtr();
     float* getErrorPtr();
