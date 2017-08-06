@@ -120,10 +120,6 @@ void Layer::init(
 
     // Allocate host memo
     weightMat = (float*) malloc( weightMatSize * sizeof( float ) );
-    // Randomly init weight matrix
-    for (unsigned int i = 0; i < weightMatSize; i++)
-        weightMat[i] = ((float) (rand() % 101) - 50.0f) / 50.0f;
-
     /* Determine block and grid size of kernel functions */
     if (weightMatSize > NUM_BLOCK_THREADS)
     {
@@ -135,6 +131,13 @@ void Layer::init(
     // Allocate device memo
     cudaErrorCheck( cudaMalloc( (void**) &dWeightMat, weightMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMalloc( (void**) &dDeltaWeightMat, weightMatSize * sizeof( float ) ) );
+}
+
+void Layer::initWeightData( const float initialWeightRange )
+{
+    // Randomly init weight matrix
+    for (unsigned int i = 0; i < weightMatSize; i++)
+        weightMat[i] = ((float) (rand() % 1001) - 500.0f) / 500.0f * initialWeightRange;
     cudaErrorCheck( cudaMemcpyAsync(
         dWeightMat,
         weightMat,
@@ -185,13 +188,13 @@ void Layer::initOutputBuffers( const unsigned int numInstances )
     // Init device data
     cudaErrorCheck( cudaMalloc( (void**) &dOutputMat, outputMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMalloc( (void**) &dErrorMat, errorMatSize * sizeof( float ) ) );
+    dOutputMatOffset = (layerType != HIDDEN_LAYER) ? dOutputMat : dOutputMat + numInstances;
     // Fill in with X0 as bias
     cudaErrorCheck( cudaMemcpyAsync(
         dOutputMat,
         outputMat,
         numInstances * sizeof( float ),
         cudaMemcpyHostToDevice ) );
-    dOutputMatOffset = (layerType != HIDDEN_LAYER) ? dOutputMat : dOutputMat + numInstances;
 }
 
 float* Layer::forwardOutput(

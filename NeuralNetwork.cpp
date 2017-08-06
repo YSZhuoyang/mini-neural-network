@@ -23,8 +23,8 @@ NeuralNetwork::~NeuralNetwork()
 
 
 void NeuralNetwork::initLayers(
-    const unsigned int numLayers,
     const unsigned int* architecture,
+    const unsigned int numLayers,
     cublasHandle_t cublasHandle )
 {
     this->architecture = architecture;
@@ -71,11 +71,15 @@ void NeuralNetwork::train(
     const unsigned int maxIter,
     const float learningRate,
     const float regularParam,
+    const float initialWeightRange,
     const float costThreshold )
 {
     // Prepare buffers in each layer
     for (unsigned int i = 0; i < numLayers; i++)
+    {
+        layerArr[i].initWeightData( initialWeightRange );
         layerArr[i].initOutputBuffers( numInstances );
+    }
 
     // Init device training data
     float* dFeatureMat = nullptr;

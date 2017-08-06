@@ -24,6 +24,7 @@ public:
         // Determine wether X0 for bias is included in output features
         const unsigned short layerType,
         cublasHandle_t cublasHandle );
+    void initWeightData( const float initialWeightRange );
     void initOutputBuffers( const unsigned int numInstances );
     float* forwardOutput(
         const float* dInputMat,

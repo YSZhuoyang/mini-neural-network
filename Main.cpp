@@ -26,8 +26,8 @@ int main()
     architecture[3] = (numClasses == 2) ? 1 : numClasses;
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
-        numLayers,
         architecture,
+        numLayers,
         cublasHandle );
 
     time_t start, end;
@@ -38,9 +38,10 @@ int main()
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndexMat(),
         trainSetImporter.GetNumInstances(),
-        400,
+        2000,
         0.2f,
         0.1f,
+        1.0f,
         1.0f );
 
     time( &end );
@@ -51,10 +52,6 @@ int main()
         testSetImporter.GetFeatureMatTrans(),
         testSetImporter.GetClassIndexMat(),
         testSetImporter.GetNumInstances() );
-    // neuralNetwork.analyze(
-    //     "This is bad",
-    //     trainSetImporter.GetFeatures(),
-    //     trainSetImporter.GetClassAttr() );
 
     // Release CuBLAS context resources
     cublasErrorCheck( cublasDestroy( cublasHandle ) );

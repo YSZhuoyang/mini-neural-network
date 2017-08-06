@@ -12,10 +12,10 @@ public:
     ~NeuralNetwork();
 
     void initLayers(
-        const unsigned int numLayers,
         // An array of length which equals to numLayers + 1
         // All except last count include bias
         const unsigned int* architecture,
+        const unsigned int numLayers,
         cublasHandle_t cublasHandle );
     void train(
         const float* featureMat,
@@ -24,6 +24,7 @@ public:
         const unsigned int maxIter,
         const float learningRate,
         const float regularParam,
+        const float initialWeightRange,
         const float costThreshold );
     void test(
         const float* featureMat,
