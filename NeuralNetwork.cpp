@@ -256,7 +256,7 @@ inline void NeuralNetwork::backProp(
         layerArr[i - 1].backPropError(
             layerArr[i].getDErrorPtr(),
             layerArr[i].getDWeightPtr(),
-            architecture[i + 1],
+            layerArr[i].getNumNodes(),
             stream2 );
         cudaErrorCheck( cudaEventRecord( backPropCompletes[i - 1], stream2 ) );
 
