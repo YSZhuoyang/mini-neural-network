@@ -147,7 +147,7 @@ void NeuralNetwork::backProp( const float learningParam )
         layerArr[i - 1].backPropError(
             layerArr[i].getDErrorPtr(),
             layerArr[i].getDWeightPtr(),
-            layerArr[i].getNumFeaturesOut(),
+            layerArr[i].getNumNodes(),
             stream2 );
         cudaErrorCheck( cudaEventRecord( backPropCompletes[i - 1], stream2 ) );
 
