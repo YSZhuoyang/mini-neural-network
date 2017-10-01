@@ -84,7 +84,7 @@ void NeuralNetwork::train(
     // For testing gradient descent
     float* outputMat = layerArr[numHiddenLayers].getOutputPtr();
     float* dOutputMat = layerArr[numHiddenLayers].getDOutputPtr();
-    unsigned int numFeaturesOut = layerArr[numHiddenLayers].getNumFeaturesOut();
+    unsigned int numFeaturesOut = layerArr[numHiddenLayers].getNumNodes();
     unsigned int outputMatSize = numFeaturesOut * numInstances;
     cudaErrorCheck( cudaMemcpy(
         outputMat,
@@ -124,7 +124,7 @@ void NeuralNetwork::backProp(
         layerArr[i - 1].backPropError(
             layerArr[i].getDErrorPtr(),
             layerArr[i].getDWeightPtr(),
-            layerArr[i].getNumFeaturesOut() );
+            layerArr[i].getNumNodes() );
         printf( "layer %d: update weights ...\n", i );
         layerArr[i].updateWeights(
             layerArr[i - 1].getDOutputPtr(),

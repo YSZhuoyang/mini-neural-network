@@ -43,7 +43,7 @@ public:
     float* getDWeightPtr();
     float* getDOutputPtr();
     float* getDErrorPtr();
-    unsigned int getNumFeaturesOut();
+    unsigned int getNumNodes();
 
 
 private:

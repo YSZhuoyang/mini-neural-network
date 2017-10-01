@@ -168,9 +168,6 @@ void Layer::init(
 
 float* Layer::forwardOutput( const float* dInputMat )
 {
-    // use cublasCgemm3m ...
-
-
     const float alpha = 1.0f;
     const float beta = 0.0f;
 
@@ -199,15 +196,12 @@ float* Layer::forwardOutput( const float* dInputMat )
 }
 
 void Layer::backPropError(
-    const float* dNextLayerErrorMat,
-    const float* dNextLayerWeightMat,
-    const unsigned int numNextLayerFeasOut )
+    const float* dErrorMatNextLayer,
+    const float* dWeightMatNextLayer,
+    const unsigned int numNodesNextLayer )
 {
     const float alpha = 1.0f;
     const float beta = 0.0f;
-
-    // use cublasCgemm3m ...
-
 
     cublasErrorCheck( cublasSgemm(
         cublasHandle,
@@ -215,12 +209,12 @@ void Layer::backPropError(
         CUBLAS_OP_T,
         numInstances,
         numNodes,
-        numNextLayerFeasOut,
+        numNodesNextLayer,
         &alpha,
-        dNextLayerErrorMat,
+        dErrorMatNextLayer,
         numInstances,
         // Exclude bias
-        dNextLayerWeightMat + 1,
+        dWeightMatNextLayer + 1,
         numFeaturesOut,
         &beta,
         dErrorMat,
@@ -367,7 +361,7 @@ float* Layer::getErrorPtr()
     return errorMat;
 }
 
-unsigned int Layer::getNumFeaturesOut()
+unsigned int Layer::getNumNodes()
 {
-    return numFeaturesOut;
+    return numNodes;
 }

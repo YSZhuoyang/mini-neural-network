@@ -37,7 +37,7 @@ int main()
     neuralNetwork.train(
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndex(),
-        200,
+        2000,
         0.2f,
         0.1f,
         1.0f );
