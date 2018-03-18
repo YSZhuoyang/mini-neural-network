@@ -9,9 +9,8 @@ NeuralNetwork::NeuralNetwork()
 
 NeuralNetwork::~NeuralNetwork()
 {
-    cudaErrorCheck( cudaStreamDestroy( stream1 ) );
-    cudaErrorCheck( cudaStreamDestroy( stream2 ) );
-
+    cudaErrorCheck( cudaEventDestroy( trainingComplete ) );
+    cudaErrorCheck( cudaEventDestroy( testComplete ) );
     cudaErrorCheck( cudaEventDestroy( forwardPropComplete ) );
     for (unsigned int i = 0; i < numHiddenLayers; i++)
         cudaErrorCheck( cudaEventDestroy( backPropCompletes[i] ) );
@@ -20,23 +19,16 @@ NeuralNetwork::~NeuralNetwork()
 
     delete[] layerArr;
     layerArr = nullptr;
-
-    cudaErrorCheck( cudaFree( dFeatureMat ) );
-    cudaErrorCheck( cudaFree( dClassIndexVec ) );
-    dFeatureMat = nullptr;
-    dClassIndexVec = nullptr;
 }
 
 
 void NeuralNetwork::initLayers(
-    const unsigned int numInstances,
-    const unsigned int numLayers,
     const unsigned int* architecture,
+    const unsigned int numLayers,
     cublasHandle_t cublasHandle )
 {
     this->architecture = architecture;
     this->numLayers = numLayers;
-    this->numInstances = numInstances;
     this->cublasHandle = cublasHandle;
 
     numHiddenLayers = numLayers - 1;
@@ -44,101 +36,216 @@ void NeuralNetwork::initLayers(
 
     for (unsigned int i = 0; i < numLayers; i++)
     {
-        unsigned short layerType;
-        if (i == numLayers - 1) layerType = OUTPUT_LAYER;
-        else layerType = HIDDEN_LAYER;
+        const LayerType layerType = (i == numLayers - 1) ? OUTPUT_LAYER : HIDDEN_LAYER;
 
         layerArr[i].init(
-            numInstances,
             architecture[i],
             architecture[i + 1],
             layerType,
             cublasHandle );
     }
 
-    cudaErrorCheck( cudaStreamCreate( &stream1 ) );
-    cudaErrorCheck( cudaStreamCreate( &stream2 ) );
-    cudaErrorCheck( cudaEventCreateWithFlags( &forwardPropComplete, cudaEventDisableTiming ) );
-    backPropCompletes = (cudaEvent_t *) malloc( numHiddenLayers * sizeof( cudaEvent_t ) );
+    cudaErrorCheck( cudaEventCreateWithFlags(
+        &trainingComplete,
+        cudaEventDisableTiming ) );
+    cudaErrorCheck( cudaEventCreateWithFlags(
+        &testComplete,
+        cudaEventDisableTiming ) );
+    cudaErrorCheck( cudaEventCreateWithFlags(
+        &forwardPropComplete,
+        cudaEventDisableTiming ) );
+    backPropCompletes =
+        (cudaEvent_t*) malloc( numHiddenLayers * sizeof( cudaEvent_t ) );
     for (unsigned int i = 0; i < numHiddenLayers; i++)
-        cudaErrorCheck( cudaEventCreateWithFlags( &backPropCompletes[i], cudaEventDisableTiming ) );
+        cudaErrorCheck( cudaEventCreateWithFlags(
+            &backPropCompletes[i],
+            cudaEventDisableTiming ) );
 }
 
 void NeuralNetwork::train(
     const float* featureMat,
-    const unsigned short* classIndexVec,
+    const unsigned short* classIndexMat,
+    const unsigned int numInstances,
     const unsigned int maxIter,
     const float learningRate,
+    const float regularParam,
+    const float initialWeightRange,
     const float costThreshold )
 {
-    this->classIndexVec = classIndexVec;
-    const unsigned int numTrainingFeas = architecture[0];
-    // Allocate device memo for training data
-    cudaErrorCheck( cudaMalloc( (void**) &dFeatureMat, numInstances * numTrainingFeas * sizeof( float ) ) );
-    cudaErrorCheck( cudaMalloc( (void**) &dClassIndexVec, numInstances * sizeof( unsigned short ) ) );
+    // Init device training data
+    float* dFeatureMat = nullptr;
+    float* dCostMat = nullptr;
+    unsigned short* dClassIndexMat = nullptr;
+    const unsigned int trainFeatureMatSize = numInstances * architecture[0];
+    const unsigned int classIndexMatSize = numInstances * architecture[numLayers];
+    cudaErrorCheck( cudaMalloc(
+        (void**) &dFeatureMat,
+        trainFeatureMatSize * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc(
+        (void**) &dCostMat,
+        classIndexMatSize * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc(
+        (void**) &dClassIndexMat,
+        classIndexMatSize * sizeof( unsigned short ) ) );
     cudaErrorCheck( cudaMemcpyAsync(
         dFeatureMat,
         featureMat,
-        numInstances * numTrainingFeas * sizeof( float ),
+        trainFeatureMatSize * sizeof( float ),
         cudaMemcpyHostToDevice ) );
     cudaErrorCheck( cudaMemcpyAsync(
-        dClassIndexVec,
-        classIndexVec,
-        numInstances * sizeof( unsigned short ),
+        dClassIndexMat,
+        classIndexMat,
+        classIndexMatSize * sizeof( unsigned short ),
         cudaMemcpyHostToDevice ) );
 
+    // Init cuda stream resources
+    cudaStream_t stream1;
+    cudaStream_t stream2;
+    cudaErrorCheck( cudaStreamCreate( &stream1 ) );
+    cudaErrorCheck( cudaStreamCreate( &stream2 ) );
+
+    // Initialize weight buffer in each layer
+    cudaErrorCheck( cudaStreamWaitEvent( stream1, testComplete, 0 ) );
+    for (unsigned int i = 0; i < numLayers; i++)
+    {
+        layerArr[i].initWeightData( initialWeightRange );
+        layerArr[i].initOutputBuffers( numInstances );
+    }
+
+    // Start gradient descent
+    cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
     float learningParam = -learningRate / (float) numInstances;
     unsigned int iter = 0;
-    cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
     while (iter++ < maxIter)
     {
-        forwardProp();
-        backProp( learningParam );
+        forwardProp( dFeatureMat, dClassIndexMat, stream1 );
+        backProp( dFeatureMat, learningParam, regularParam, stream1, stream2 );
 
         printf( "\n" );
     }
+    cudaErrorCheck( cudaEventRecord( trainingComplete, stream1 ) );
 
-    // Copy from device to host
-    // For testing gradient descent
-    float* outputMat = layerArr[numHiddenLayers].getOutputPtr();
-    float* dOutputMat = layerArr[numHiddenLayers].getDOutputPtr();
-    unsigned int numFeaturesOut = layerArr[numHiddenLayers].getNumNodes();
-    unsigned int outputMatSize = numFeaturesOut * numInstances;
-    cudaErrorCheck( cudaMemcpy(
-        outputMat,
-        dOutputMat,
-        outputMatSize * sizeof( float ),
-        cudaMemcpyDeviceToHost ) );
-
-    float costSum = 0.0f;
-    for (unsigned int i = 0; i < numInstances; i++)
-        for (unsigned int j = 0; j < numFeaturesOut; j++)
-            costSum -= (classIndexVec[i]) ?
-                logf(outputMat[i * numFeaturesOut + j]) : logf(1.0f - outputMat[i * numFeaturesOut + j]);
-
+    // Sum up cost
+    float costSum =
+        layerArr[numHiddenLayers].computeCost( dCostMat, dClassIndexMat, stream1 );
+    // cudaErrorCheck( cudaStreamSynchronize( stream1 ) );
     printf( "Cost: %f\n", costSum );
+
+    // Release cuda stream resources
+    cudaErrorCheck( cudaStreamDestroy( stream1 ) );
+    cudaErrorCheck( cudaStreamDestroy( stream2 ) );
+
+    // Release training resources
+    cudaErrorCheck( cudaFree( dFeatureMat ) );
+    cudaErrorCheck( cudaFree( dClassIndexMat ) );
+    cudaErrorCheck( cudaFree( dCostMat ) );
+    dFeatureMat = nullptr;
+    dClassIndexMat = nullptr;
+    dCostMat = nullptr;
 }
 
-void NeuralNetwork::forwardProp()
+void NeuralNetwork::test(
+    const float* featureMat,
+    const unsigned short* classIndexMat,
+    const unsigned int numInstances )
+{
+    cudaStream_t stream;
+    cudaErrorCheck( cudaStreamCreate( &stream ) );
+    cudaErrorCheck( cudaStreamWaitEvent( stream, trainingComplete, 0 ) );
+    cublasErrorCheck( cublasSetStream( cublasHandle, stream ) );
+
+    // Prepare buffers in each layer
+    for (unsigned int i = 0; i < numLayers; i++)
+        layerArr[i].initOutputBuffers( numInstances );
+
+    // Init device test data
+    float* dFeatureMat = nullptr;
+    unsigned short* dClassIndexMat = nullptr;
+    const unsigned int trainFeatureMatSize = numInstances * architecture[0];
+    const unsigned int classIndexMatSize = numInstances * architecture[numLayers];
+    cudaErrorCheck( cudaMalloc(
+        (void**) &dFeatureMat,
+        trainFeatureMatSize * sizeof( float ) ) );
+    cudaErrorCheck( cudaMalloc(
+        (void**) &dClassIndexMat,
+        classIndexMatSize * sizeof( unsigned short ) ) );
+    cudaErrorCheck( cudaMemcpyAsync(
+        dFeatureMat,
+        featureMat,
+        trainFeatureMatSize * sizeof( float ),
+        cudaMemcpyHostToDevice ) );
+    cudaErrorCheck( cudaMemcpyAsync(
+        dClassIndexMat,
+        classIndexMat,
+        classIndexMatSize * sizeof( unsigned short ),
+        cudaMemcpyHostToDevice ) );
+
+    // Classify
+    forwardProp( dFeatureMat, dClassIndexMat, stream );
+
+    // Compute accuracy
+    unsigned int correctCounter = 0;
+    unsigned int numOutputFeas = architecture[numLayers];
+    float* outputMat = layerArr[numHiddenLayers].getOutputPtr();
+    float* dOutputMat = layerArr[numHiddenLayers].getDOutputPtr();
+
+    cudaErrorCheck( cudaMemcpyAsync(
+        outputMat,
+        dOutputMat,
+        classIndexMatSize * sizeof( float ),
+        cudaMemcpyDeviceToHost,
+        stream ) );
+    cudaErrorCheck( cudaStreamSynchronize( stream ) );
+    for (unsigned int i = 0; i < numInstances; i++)
+    {
+        bool correct = true;
+        for (unsigned int j = 0; j < numOutputFeas; j++)
+        {
+            float diff = outputMat[numInstances * j + i] -
+                    (float) classIndexMat[numInstances * j + i];
+            correct = (diff < 0.5f && diff > -0.5f);
+        }
+        correctCounter += correct;
+    }
+    printf( "Accuracy: %f\n", (float) correctCounter / (float) numInstances );
+
+    cudaErrorCheck( cudaEventRecord( testComplete, stream ) );
+    cudaErrorCheck( cudaStreamDestroy( stream ) );
+
+    // Release test resources
+    cudaErrorCheck( cudaFree( dFeatureMat ) );
+    cudaErrorCheck( cudaFree( dClassIndexMat ) );
+    dFeatureMat = nullptr;
+    dClassIndexMat = nullptr;
+}
+
+inline void NeuralNetwork::forwardProp(
+    const float* dFeatureMat,
+    const unsigned short* dClassIndexMat,
+    cudaStream_t stream )
 {
     // Forward propagation
     const float* dInputMat = dFeatureMat;
     for (unsigned int i = 0; i < numLayers; i++)
     {
-        printf( "layer: %d forward output ...\n", i );
-        dInputMat = layerArr[i].forwardOutput( dInputMat, stream1 );
+        printf( "layer %d: forward output ...\n", i );
+        dInputMat = layerArr[i].forwardOutput( dInputMat, stream );
     }
     layerArr[numHiddenLayers].computeOutputLayerError(
-        dClassIndexVec,
-        classIndexVec,
-        stream1 );
+        dClassIndexMat,
+        stream );
 
-    cudaErrorCheck( cudaEventRecord( forwardPropComplete, stream1 ) );
-    cudaErrorCheck( cudaStreamWaitEvent( stream2, forwardPropComplete, 0 ) );
+    cudaErrorCheck( cudaEventRecord( forwardPropComplete, stream ) );
 }
 
-void NeuralNetwork::backProp( const float learningParam )
+inline void NeuralNetwork::backProp(
+    const float* dFeatureMat,
+    const float learningParam,
+    const float regularParam,
+    cudaStream_t stream1,
+    cudaStream_t stream2 )
 {
+    cudaErrorCheck( cudaStreamWaitEvent( stream2, forwardPropComplete, 0 ) );
     // Backword propagation
     for (unsigned int i = numHiddenLayers; i > 0; i--)
     {
@@ -156,11 +263,15 @@ void NeuralNetwork::backProp( const float learningParam )
         cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
         layerArr[i].updateWeights(
             layerArr[i - 1].getDOutputPtr(),
-            learningParam );
+            learningParam,
+            regularParam,
+            stream1 );
     }
 
     printf( "layer 0: update weights ...\n" );
     layerArr[0].updateWeights(
         dFeatureMat,
-        learningParam );
+        learningParam,
+        regularParam,
+        stream1 );
 }

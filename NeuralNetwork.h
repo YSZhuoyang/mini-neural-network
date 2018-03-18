@@ -12,40 +12,49 @@ public:
     ~NeuralNetwork();
 
     void initLayers(
-        const unsigned int numInstances,
-        const unsigned int numLayers,
         // An array of length which equals to numLayers + 1
         // All except last count include bias
         const unsigned int* architecture,
+        const unsigned int numLayers,
         cublasHandle_t cublasHandle );
     void train(
         const float* featureMat,
-        const unsigned short* classIndexVec,
+        const unsigned short* classIndexMat,
+        const unsigned int numInstances,
         const unsigned int maxIter,
         const float learningRate,
+        const float regularParam,
+        const float initialWeightRange,
         const float costThreshold );
+    void test(
+        const float* featureMat,
+        const unsigned short* classIndexMat,
+        const unsigned int numInstances );
 
 private:
-    void forwardProp();
-    void backProp( const float learningParam );
+    inline void forwardProp(
+        const float* dFeatureMat,
+        const unsigned short* dClassIndexMat,
+        cudaStream_t stream );
+    inline void backProp(
+        const float* dFeatureMat,
+        const float learningParam,
+        const float regularParam,
+        cudaStream_t stream1,
+        cudaStream_t stream2 );
 
-    // To be deleted
-    const unsigned short* classIndexVec = nullptr;
-    // Does not include input layer
-    float* dFeatureMat               = nullptr;
-    unsigned short* dClassIndexVec   = nullptr;
     // Number of features in each layer including input layer
     const unsigned int* architecture = nullptr;
+    // Does not include input layer
     Layer* layerArr                  = nullptr;
-    unsigned int numInstances        = 0;
     // Number of layers excluding input layer
     unsigned short numLayers         = 0;
     unsigned short numHiddenLayers   = 0;
 
-    cudaEvent_t* backPropCompletes      = nullptr;
+    cudaEvent_t* backPropCompletes   = nullptr;
     cudaEvent_t forwardPropComplete;
-    cudaStream_t stream1;
-    cudaStream_t stream2;
+    cudaEvent_t trainingComplete;
+    cudaEvent_t testComplete;
     cublasHandle_t cublasHandle;
 };
 

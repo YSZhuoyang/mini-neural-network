@@ -6,7 +6,6 @@
 #include "BasicDataStructures.h"
 #include "Helper.h"
 
-#include <stdio.h>
 #include <string.h>
 
 
@@ -27,13 +26,14 @@ public:
     ~ArffImporter();
 
     void Read( const char* fileName );
-    std::vector<char*> GetClassAttr();
-    std::vector<NumericAttr> GetFeatures();
+    std::vector<char*> GetClassMeta();
+    std::vector<NumericAttr> GetFeatureMeta();
     float* GetFeatureMat();
     float* GetFeatureMatTrans();
-    unsigned short* GetClassIndex();
+    unsigned short* GetClassIndexMat();
     unsigned int GetNumInstances();
     unsigned int GetNumFeatures();
+    unsigned short GetNumClasses();
 
 
 private:
@@ -45,13 +45,13 @@ private:
     std::vector<NumericAttr> featureVec;
     std::vector<Instance> instanceVec;
 
-    float* featureMat        = nullptr;
-    float* featureMatTrans   = nullptr;
-    unsigned short* classArr = nullptr;
+    float* featureMat             = nullptr;
+    float* featureMatTrans        = nullptr;
+    unsigned short* classIndexMat = nullptr;
 
-    unsigned int numFeatures       = 0;
-    unsigned int numInstances      = 0;
-    unsigned short numClasses      = 0;
+    unsigned int numFeatures      = 0;
+    unsigned int numInstances     = 0;
+    unsigned short numClasses     = 0;
 };
 
 #endif

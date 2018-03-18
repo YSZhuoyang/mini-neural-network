@@ -7,8 +7,6 @@
 
 
 #define NUM_BLOCK_THREADS 128
-#define HIDDEN_LAYER      0
-#define OUTPUT_LAYER      1
 
 using namespace MyHelper;
 
@@ -19,12 +17,13 @@ public:
     ~Layer();
 
     void init(
-        const unsigned int numInstances,
         const unsigned int numFeaturesIn,
         const unsigned int numFeaturesOut,
         // Determine wether X0 for bias is included in output features
-        const unsigned short layerType,
+        const LayerType layerType,
         cublasHandle_t cublasHandle );
+    void initWeightData( const float initialWeightRange );
+    void initOutputBuffers( const unsigned int numInstances );
     float* forwardOutput(
         const float* dInputMat,
         cudaStream_t stream );
@@ -34,12 +33,17 @@ public:
         const unsigned int numNextLayerFeasOut,
         cudaStream_t stream );
     void computeOutputLayerError(
-        const unsigned short* dClassIndexVec,
-        const unsigned short* classIndexVec,
+        const unsigned short* dClassIndexMat,
         cudaStream_t stream );
     void updateWeights(
         const float* dInputMat,
-        const float learningParam );
+        const float learningParam,
+        const float regularParam,
+        cudaStream_t stream );
+    float computeCost(
+        float* dCostMat,
+        const unsigned short* dClassIndexMat,
+        cudaStream_t stream );
     float* getOutputPtr();
     float* getErrorPtr();
     float* getWeightPtr();
@@ -67,13 +71,14 @@ private:
     unsigned int weightMatSize  = 0;
     unsigned int errorMatSize   = 0;
     unsigned int outputMatSize  = 0;
-    unsigned int inputMatSize   = 0;
-    unsigned int layerType      = 0;
+    LayerType layerType;
     // Kernel config
     dim3 sigBlockDim;
     dim3 sigGridDim;
     dim3 ccBlockDim;
     dim3 ccGridDim;
+    dim3 uwBlockDim;
+    dim3 uwGridDim;
     cublasHandle_t cublasHandle;
 };
 

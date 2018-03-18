@@ -13,7 +13,7 @@ ArffImporter::~ArffImporter()
 {
     free( featureMat );
     free( featureMatTrans );
-    free( classArr );
+    free( classIndexMat );
 
     for (char* classAttr : classVec) free( classAttr );
     classVec.clear();
@@ -29,12 +29,14 @@ void ArffImporter::BuildFeatureMatrix()
 
     // Include X0 to be multiplied with bias    
     numFeatures++;
+    const unsigned short classIndexMatNumRows = (numClasses == 2) ? 1 : numClasses;
     featureMat =
         (float*) malloc( numInstances * numFeatures * sizeof( float ) );
     featureMatTrans =
         (float*) malloc( numInstances * numFeatures * sizeof( float ) );
-    classArr =
-        (unsigned short*) malloc( numInstances * sizeof( unsigned short ) );
+    classIndexMat = (unsigned short*) calloc(
+        classIndexMatNumRows * numInstances,
+        sizeof( unsigned short ) );
     for (unsigned int i = 0; i < numInstances; i++)
     {
         float* offset = featureMat + i * numFeatures;
@@ -44,8 +46,12 @@ void ArffImporter::BuildFeatureMatrix()
             offset + 1,
             instanceVec[i].featureAttrArray,
             (numFeatures - 1) * sizeof( float ) );
-        classArr[i] = instanceVec[i].classIndex;
         free( instanceVec[i].featureAttrArray );
+
+        if (numClasses > 2)
+            classIndexMat[instanceVec[i].classIndex * numInstances + i] = 1;
+        else
+            classIndexMat[i] = instanceVec[i].classIndex;
     }
 
     Normalize();
@@ -148,12 +154,8 @@ void ArffImporter::Read( const char* fileName )
         {
             numFeatures = featureVec.size();
             numClasses = classVec.size();
-            
-            unsigned int featureAttrArraySize =
-                numFeatures * sizeof( float );
-
-            float* featureValueSumArr = (float*) calloc( numFeatures, 
-                sizeof( float ) );
+            unsigned int featureAttrArraySize = numFeatures * sizeof( float );
+            float* featureValueSumArr = (float*) calloc( numFeatures, sizeof( float ) );
 
             while (fgets( buffer, READ_LINE_MAX, fp ) != nullptr)
             {
@@ -199,7 +201,7 @@ void ArffImporter::Read( const char* fileName )
             // Compute bucket size and mean value for each numerical attribute
             for (unsigned int i = 0; i < numFeatures; i++)
             {
-                featureVec[i].mean = featureValueSumArr[i] / instanceSize;
+                featureVec[i].mean = featureValueSumArr[i] / (float) instanceSize;
 
                 // printf(
                 //     "feature %u, max: %f, min: %f, mean: %f\n",
@@ -222,12 +224,12 @@ void ArffImporter::Read( const char* fileName )
     BuildFeatureMatrix();
 }
 
-std::vector<char*> ArffImporter::GetClassAttr()
+std::vector<char*> ArffImporter::GetClassMeta()
 {
     return classVec;
 }
 
-std::vector<NumericAttr> ArffImporter::GetFeatures()
+std::vector<NumericAttr> ArffImporter::GetFeatureMeta()
 {
     return featureVec;
 }
@@ -242,9 +244,9 @@ float* ArffImporter::GetFeatureMatTrans()
     return featureMatTrans;
 }
 
-unsigned short* ArffImporter::GetClassIndex()
+unsigned short* ArffImporter::GetClassIndexMat()
 {
-    return classArr;
+    return classIndexMat;
 }
 
 unsigned int ArffImporter::GetNumInstances()
@@ -255,4 +257,9 @@ unsigned int ArffImporter::GetNumInstances()
 unsigned int ArffImporter::GetNumFeatures()
 {
     return numFeatures;
+}
+
+unsigned short ArffImporter::GetNumClasses()
+{
+    return numClasses;
 }
