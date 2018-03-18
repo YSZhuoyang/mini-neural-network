@@ -122,7 +122,7 @@ void Layer::init(
 
     // Randomly init weight matrix
     for (unsigned int i = 0; i < weightMatSize; i++)
-        weightMat[i] = ((float) (rand() % 101) - 50.0f) / 50.0f;
+        weightMat[i] = ((float) (rand() % 1001) - 500.0f) / 500.0f;
 
     /* Determine block and grid size of kernel functions */
     if (outputMatSize > NUM_BLOCK_THREADS)
