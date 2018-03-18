@@ -102,7 +102,7 @@ void NeuralNetwork::train(
     // For testing gradient descent
     float* outputMat = layerArr[numHiddenLayers].getOutputPtr();
     float* dOutputMat = layerArr[numHiddenLayers].getDOutputPtr();
-    unsigned int numFeaturesOut = layerArr[numHiddenLayers].getNumFeaturesOut();
+    unsigned int numFeaturesOut = layerArr[numHiddenLayers].getNumNodes();
     unsigned int outputMatSize = numFeaturesOut * numInstances;
     cudaErrorCheck( cudaMemcpy(
         outputMat,
