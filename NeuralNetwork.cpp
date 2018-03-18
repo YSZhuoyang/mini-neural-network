@@ -36,9 +36,7 @@ void NeuralNetwork::initLayers(
 
     for (unsigned int i = 0; i < numLayers; i++)
     {
-        unsigned short layerType;
-        if (i == numLayers - 1) layerType = OUTPUT_LAYER;
-        else layerType = HIDDEN_LAYER;
+        const LayerType layerType = (i == numLayers - 1) ? OUTPUT_LAYER : HIDDEN_LAYER;
 
         layerArr[i].init(
             architecture[i],
@@ -74,13 +72,6 @@ void NeuralNetwork::train(
     const float initialWeightRange,
     const float costThreshold )
 {
-    // Prepare buffers in each layer
-    for (unsigned int i = 0; i < numLayers; i++)
-    {
-        layerArr[i].initWeightData( initialWeightRange );
-        layerArr[i].initOutputBuffers( numInstances );
-    }
-
     // Init device training data
     float* dFeatureMat = nullptr;
     float* dCostMat = nullptr;
@@ -113,8 +104,15 @@ void NeuralNetwork::train(
     cudaErrorCheck( cudaStreamCreate( &stream1 ) );
     cudaErrorCheck( cudaStreamCreate( &stream2 ) );
 
-    // Start gradient descent
+    // Initialize weight buffer in each layer
     cudaErrorCheck( cudaStreamWaitEvent( stream1, testComplete, 0 ) );
+    for (unsigned int i = 0; i < numLayers; i++)
+    {
+        layerArr[i].initWeightData( initialWeightRange );
+        layerArr[i].initOutputBuffers( numInstances );
+    }
+
+    // Start gradient descent
     cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
     float learningParam = -learningRate / (float) numInstances;
     unsigned int iter = 0;
@@ -205,7 +203,7 @@ void NeuralNetwork::test(
         {
             float diff = outputMat[numInstances * j + i] -
                     (float) classIndexMat[numInstances * j + i];
-            if (diff >= 0.5f || diff <= -0.5f) correct = false;
+            correct = (diff < 0.5f && diff > -0.5f);
         }
         correctCounter += correct;
     }

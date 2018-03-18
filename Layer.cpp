@@ -36,8 +36,7 @@ __global__ void ComputeOutputLayerError(
     if (eleId >= errorMatSize) return;
 
     float output = dOutputMat[eleId];
-    // For testing
-    dOutputMat[eleId] = output;
+    // For training
     dErrorMat[eleId] = output - (float) dClassIndexMat[eleId];
 }
 
@@ -100,7 +99,7 @@ Layer::~Layer()
 void Layer::init(
     const unsigned int numFeaturesIn,
     const unsigned int numFeaturesOut,
-    const unsigned short layerType,
+    const LayerType layerType,
     cublasHandle_t cublasHandle )
 {
     if (layerType == OUTPUT_LAYER && numFeaturesOut == 2)

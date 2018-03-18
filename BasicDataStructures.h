@@ -5,6 +5,12 @@
 
 namespace BasicDataStructures
 {
+    enum LayerType
+    {
+        HIDDEN_LAYER,
+        OUTPUT_LAYER
+    };
+
     struct Instance
     {
         float* featureAttrArray;

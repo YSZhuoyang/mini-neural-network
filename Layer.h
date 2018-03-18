@@ -7,8 +7,6 @@
 
 
 #define NUM_BLOCK_THREADS 128
-#define HIDDEN_LAYER      0
-#define OUTPUT_LAYER      1
 
 using namespace MyHelper;
 
@@ -22,7 +20,7 @@ public:
         const unsigned int numFeaturesIn,
         const unsigned int numFeaturesOut,
         // Determine wether X0 for bias is included in output features
-        const unsigned short layerType,
+        const LayerType layerType,
         cublasHandle_t cublasHandle );
     void initWeightData( const float initialWeightRange );
     void initOutputBuffers( const unsigned int numInstances );
@@ -73,7 +71,7 @@ private:
     unsigned int weightMatSize  = 0;
     unsigned int errorMatSize   = 0;
     unsigned int outputMatSize  = 0;
-    unsigned int layerType      = 0;
+    LayerType layerType;
     // Kernel config
     dim3 sigBlockDim;
     dim3 sigGridDim;
