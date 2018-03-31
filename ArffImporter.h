@@ -13,8 +13,6 @@
 using namespace BasicDataStructures;
 using namespace MyHelper;
 
-class ArffImporter
-{
 #define READ_LINE_MAX     5000
 #define TOKEN_LENGTH_MAX  35
 
@@ -22,6 +20,8 @@ class ArffImporter
 #define KEYWORD_DATA      "@DATA"
 #define KEYWORD_NUMERIC   "NUMERIC"
 
+class ArffImporter
+{
 public:
     ArffImporter();
     ~ArffImporter();
