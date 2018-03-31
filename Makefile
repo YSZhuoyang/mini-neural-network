@@ -3,14 +3,6 @@
 ################################ Macros #################################
 
 SHELL = /bin/sh
-# CC = g++
-# Enable debug options
-# CFLAGS = -g -Wall -std=c++11
-# Enable best optimization options
-# CFLAGS = -Ofast -march=native -mtune=native -std=c++11
-# OBJECTS = Helper.o ArffImporter.o Layer.o NeuralNetwork.o Main.o
-
-# Enable Nvidia gpu
 NVCC = nvcc
 NVCCCFLAGS = -arch=sm_50 -std=c++11 -O3 -use_fast_math -lcublas
 CUFLAGS = -x cu
