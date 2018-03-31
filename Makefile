@@ -15,8 +15,8 @@ OBJECTS = Helper.o ArffImporter.o Layer.o NeuralNetwork.o
 exec: ${OBJECTS} Main.c
 	$(CC) ${CFLAGS} -o $@ ${OBJECTS} Main.c
 
-Helper.o: Helper.c Helper.h BasicDataStructures.h
-	$(CC) ${CFLAGS} -c Helper.c
+Helper.o: Helper.cpp Helper.h BasicDataStructures.h
+	$(CC) ${CFLAGS} -c Helper.cpp
 
 ArffImporter.o: ArffImporter.cpp ArffImporter.h BasicDataStructures.h Helper.o
 	$(CC) ${CFLAGS} -c ArffImporter.cpp
