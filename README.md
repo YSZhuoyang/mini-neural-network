@@ -66,7 +66,7 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
             Update weight associated with each connection using computed deltaWeight and regularization parm:
                 A bias node is connected:
                     w[j1[l], j2[l + 1]] = w[j1[l], j2[l + 1]] + lr * dw[j1[l], j2[l + 1]] / M
-                No bias was is connected:
+                No bias node is connected:
                     w[j1[l], j2[l + 1]] = w[j1[l], j2[l + 1]] + lr * (dw[j1[l], j2[l + 1]] + r * w[j1[l], j2[l + 1]]) / M
 
 #### Forward propagation
