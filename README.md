@@ -28,7 +28,8 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
                                       |-----numLayers-----|
 
     * (Node): each node * has an input, an output and an error associated with, input of a bias node is always 1.
-    Connection: each connection between a pair of nodes has a weight and an accumulated deltaWeight associated with. (a deltaWeight is used for updating weight during the gradient descent)
+    Connection: each connection between a pair of nodes has a weight and an accumulated deltaWeight associated with.
+                (deltaWeight is used for updating weight during the gradient descent)
 
 ### Steps
     N: number of gradient descent iterations
