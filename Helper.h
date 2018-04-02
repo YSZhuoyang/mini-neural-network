@@ -5,11 +5,10 @@
 #include "BasicDataStructures.h"
 #include <cuda_runtime.h>
 #include "cublas_v2.h"
-#include <math.h>
-#include <algorithm>
-#include <vector>
 #include <stdio.h>
 #include <time.h>
+#include <algorithm>
+#include <vector>
 
 
 using namespace BasicDataStructures;
