@@ -198,12 +198,24 @@ void NeuralNetwork::test(
     cudaErrorCheck( cudaStreamSynchronize( stream ) );
     for (unsigned int i = 0; i < numInstances; i++)
     {
-        bool correct = true;
-        for (unsigned int j = 0; j < numOutputFeas; j++)
+        bool correct;
+        if (numOutputFeas == 1)
         {
-            float diff = outputMat[numInstances * j + i] -
-                    (float) classIndexMat[numInstances * j + i];
-            correct = (diff < 0.5f && diff > -0.5f);
+            correct = classIndexMat[i] == (unsigned short) std::round(outputMat[i]);
+        }
+        else
+        {
+            float max = outputMat[i];
+            unsigned int predictedClassIndex = 0;
+            for (unsigned int j = 1; j < numOutputFeas; j++)
+            {
+                if (max < outputMat[numInstances * j + i])
+                {
+                    max = outputMat[numInstances * j + i];
+                    predictedClassIndex = j;
+                }
+            }
+            correct = classIndexMat[predictedClassIndex];
         }
         correctCounter += correct;
     }
