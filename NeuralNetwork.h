@@ -24,7 +24,6 @@ public:
         const unsigned int maxIter,
         const float learningRate,
         const float regularParam,
-        const float initialWeightRange,
         const float costThreshold );
     void test(
         const float* featureMat,

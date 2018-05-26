@@ -119,7 +119,7 @@ void Layer::init(
 
     // Allocate host memo
     weightMat = (float*) malloc( weightMatSize * sizeof( float ) );
-    /* Determine block and grid size of kernel functions */
+    /* Compute block and grid size of kernel functions */
     if (weightMatSize > NUM_BLOCK_THREADS)
     {
         uwBlockDim.x = NUM_BLOCK_THREADS;
@@ -132,11 +132,17 @@ void Layer::init(
     cudaErrorCheck( cudaMalloc( (void**) &dDeltaWeightMat, weightMatSize * sizeof( float ) ) );
 }
 
-void Layer::initWeightData( const float initialWeightRange )
+void Layer::initWeightData()
 {
-    // Randomly init weight matrix
+    std::random_device random;
+    std::mt19937 generator(random());
+    std::normal_distribution<float> normalDist;
+
+    // Randomly init weight matrix in Gaussian distribution (He et al. 2015)
+    const float scalar = sqrtf(2.0f / (float) numFeaturesIn);
     for (unsigned int i = 0; i < weightMatSize; i++)
-        weightMat[i] = ((float) (rand() % 1001) - 500.0f) / 500.0f * initialWeightRange;
+        weightMat[i] = (i % numFeaturesIn == 0) ? 0.0f : normalDist(generator) * scalar;
+
     cudaErrorCheck( cudaMemcpyAsync(
         dWeightMat,
         weightMat,

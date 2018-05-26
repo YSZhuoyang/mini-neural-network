@@ -2,6 +2,7 @@
 #define _LAYER_H_
 
 #include <cstring>
+#include <random>
 #include "Helper.h"
 
 
@@ -22,7 +23,7 @@ public:
         // Determine wether X0 for bias is included in output features
         const LayerType layerType,
         cublasHandle_t cublasHandle );
-    void initWeightData( const float initialWeightRange );
+    void initWeightData();
     void initOutputBuffers( const unsigned int numInstances );
     float* forwardOutput(
         const float* dInputMat,
