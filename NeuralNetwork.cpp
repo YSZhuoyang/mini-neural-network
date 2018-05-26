@@ -69,7 +69,6 @@ void NeuralNetwork::train(
     const unsigned int maxIter,
     const float learningRate,
     const float regularParam,
-    const float initialWeightRange,
     const float costThreshold )
 {
     // Init device training data
@@ -108,7 +107,7 @@ void NeuralNetwork::train(
     cudaErrorCheck( cudaStreamWaitEvent( stream1, testComplete, 0 ) );
     for (unsigned int i = 0; i < numLayers; i++)
     {
-        layerArr[i].initWeightData( initialWeightRange );
+        layerArr[i].initWeightData();
         layerArr[i].initOutputBuffers( numInstances );
     }
 
