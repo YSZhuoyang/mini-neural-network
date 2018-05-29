@@ -66,7 +66,7 @@ void ArffImporter::Normalize()
     {
         // Use either range / standard deviation
         float range = featureVec[i - 1].max - featureVec[i - 1].min;
-        if (range == 0.0) continue;
+        if (range == 0.0f) continue;
 
         for (unsigned int j = 0; j < numInstances; j++)
         {
