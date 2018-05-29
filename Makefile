@@ -6,7 +6,7 @@ SHELL = /bin/sh
 NVCC = nvcc
 NVCCCFLAGS = -arch=sm_50 -std=c++11 -O3 -use_fast_math -lcublas
 # Enable host code debug in vscode
-NVCCCFLAGS_DEBUG = -arch=sm_50 -std=c++11 -g -use_fast_math -lcublas
+NVCCCFLAGS_DEBUG = -arch=sm_50 -std=c++11 -g -G -use_fast_math -lcublas
 CUFLAGS = -x cu
 OBJECTS = Helper.o ArffImporter.o Layer.o NeuralNetwork.o Main.o
 OBJECTS_DEBUG = Helper_debug.o ArffImporter_debug.o Layer_debug.o NeuralNetwork_debug.o Main_debug.o

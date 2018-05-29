@@ -160,18 +160,18 @@ void NeuralNetwork::test(
     // Init device test data
     float* dFeatureMat = nullptr;
     unsigned short* dClassIndexMat = nullptr;
-    const unsigned int trainFeatureMatSize = numInstances * architecture[0];
+    const unsigned int testFeatureMatSize = numInstances * architecture[0];
     const unsigned int classIndexMatSize = numInstances * architecture[numLayers];
     cudaErrorCheck( cudaMalloc(
         (void**) &dFeatureMat,
-        trainFeatureMatSize * sizeof( float ) ) );
+        testFeatureMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMalloc(
         (void**) &dClassIndexMat,
         classIndexMatSize * sizeof( unsigned short ) ) );
     cudaErrorCheck( cudaMemcpyAsync(
         dFeatureMat,
         featureMat,
-        trainFeatureMatSize * sizeof( float ),
+        testFeatureMatSize * sizeof( float ),
         cudaMemcpyHostToDevice ) );
     cudaErrorCheck( cudaMemcpyAsync(
         dClassIndexMat,
@@ -199,9 +199,7 @@ void NeuralNetwork::test(
     {
         bool correct;
         if (numOutputFeas == 1)
-        {
-            correct = classIndexMat[i] == (unsigned short) std::round(outputMat[i]);
-        }
+            correct = classIndexMat[i] == (unsigned short) std::lroundf(outputMat[i]);
         else
         {
             float max = outputMat[i];
