@@ -127,7 +127,6 @@ void NeuralNetwork::train(
     // Sum up cost
     float costSum =
         layerArr[numHiddenLayers].computeCost( dCostMat, dClassIndexMat, stream1 );
-    // cudaErrorCheck( cudaStreamSynchronize( stream1 ) );
     printf( "Cost: %f\n", costSum );
 
     // Release cuda stream resources
@@ -188,13 +187,11 @@ void NeuralNetwork::test(
     float* outputMat = layerArr[numHiddenLayers].getOutputPtr();
     float* dOutputMat = layerArr[numHiddenLayers].getDOutputPtr();
 
-    cudaErrorCheck( cudaMemcpyAsync(
+    cudaErrorCheck( cudaMemcpy(
         outputMat,
         dOutputMat,
         classIndexMatSize * sizeof( float ),
-        cudaMemcpyDeviceToHost,
-        stream ) );
-    cudaErrorCheck( cudaStreamSynchronize( stream ) );
+        cudaMemcpyDeviceToHost ) );
     for (unsigned int i = 0; i < numInstances; i++)
     {
         bool correct;

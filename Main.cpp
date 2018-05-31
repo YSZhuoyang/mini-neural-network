@@ -16,14 +16,13 @@ int main()
     cublasErrorCheck( cublasCreate( &cublasHandle ) );
 
     // Number of layers excluding input layer
-    const unsigned int numLayers = 3;
+    const unsigned int numLayers = 2;
     const unsigned int numClasses = trainSetImporter.GetNumClasses();
     unsigned int architecture[numLayers + 1];
     // Number of features in each layer including input layer
     architecture[0] = trainSetImporter.GetNumFeatures();
-    architecture[1] = 501;
-    architecture[2] = 51;
-    architecture[3] = (numClasses == 2) ? 1 : numClasses;
+    architecture[1] = 7;
+    architecture[2] = (numClasses == 2) ? 1 : numClasses;
     NeuralNetwork neuralNetwork;
     neuralNetwork.initLayers(
         architecture,
@@ -38,8 +37,8 @@ int main()
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndexMat(),
         trainSetImporter.GetNumInstances(),
-        2000,
-        0.1f,
+        8000,
+        0.2f,
         0.0f,
         1.0f );
 
