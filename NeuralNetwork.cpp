@@ -19,18 +19,22 @@ NeuralNetwork::~NeuralNetwork()
 
     delete[] layerArr;
     layerArr = nullptr;
+
+    free( architecture );
+    architecture = nullptr;
 }
 
 
 void NeuralNetwork::initLayers(
-    const unsigned int* architecture,
-    const unsigned int numLayers,
+    const std::vector<unsigned int>& architecture,
     cublasHandle_t cublasHandle )
 {
-    this->architecture = architecture;
-    this->numLayers = numLayers;
+    this->architecture = (unsigned int*) malloc( architecture.size() * sizeof( unsigned int ) );
+    std::copy( architecture.begin(), architecture.end(), this->architecture );
     this->cublasHandle = cublasHandle;
 
+    // Number of layers excluding input layer
+    numLayers = architecture.size() - 1;
     numHiddenLayers = numLayers - 1;
     layerArr = new Layer[numLayers];
 

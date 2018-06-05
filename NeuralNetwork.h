@@ -12,10 +12,9 @@ public:
     ~NeuralNetwork();
 
     void initLayers(
-        // An array of length which equals to numLayers + 1
-        // All except last count include bias
-        const unsigned int* architecture,
-        const unsigned int numLayers,
+        // An array of length which equals to numLayers + 1, and
+        // all layers except output layer include bias input X0
+        const std::vector<unsigned int>& architecture,
         cublasHandle_t cublasHandle );
     void train(
         const float* featureMat,
@@ -43,7 +42,7 @@ private:
         cudaStream_t stream2 );
 
     // Number of features in each layer including input layer
-    const unsigned int* architecture = nullptr;
+    unsigned int* architecture       = nullptr;
     // Does not include input layer
     Layer* layerArr                  = nullptr;
     // Number of layers excluding input layer
