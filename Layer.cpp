@@ -72,12 +72,12 @@ __global__ void ComputeCost(
 }
 
 
-Layer::Layer()
+LayerD::LayerD()
 {
 
 }
 
-Layer::~Layer()
+LayerD::~LayerD()
 {
     free( weightMat );
     free( outputMat );
@@ -96,7 +96,7 @@ Layer::~Layer()
 }
 
 
-void Layer::init(
+void LayerD::init(
     const unsigned int numFeaturesIn,
     const unsigned int numFeaturesOut,
     const LayerType layerType,
@@ -132,7 +132,7 @@ void Layer::init(
     cudaErrorCheck( cudaMalloc( (void**) &dDeltaWeightMat, weightMatSize * sizeof( float ) ) );
 }
 
-void Layer::initWeightData()
+void LayerD::initWeightData()
 {
     std::random_device random;
     std::mt19937 generator(random());
@@ -150,7 +150,7 @@ void Layer::initWeightData()
         cudaMemcpyHostToDevice ) );
 }
 
-void Layer::initOutputBuffers( const unsigned int numInstances )
+void LayerD::initOutputBuffers( const unsigned int numInstances )
 {
     this->numInstances = numInstances;
     errorMatSize = numInstances * numNodes;
@@ -202,7 +202,7 @@ void Layer::initOutputBuffers( const unsigned int numInstances )
         cudaMemcpyHostToDevice ) );
 }
 
-float* Layer::forwardOutput(
+float* LayerD::forwardOutput(
     const float* dInputMat,
     cudaStream_t stream )
 {
@@ -233,7 +233,7 @@ float* Layer::forwardOutput(
     return dOutputMat;
 }
 
-void Layer::backPropError(
+void LayerD::backPropError(
     const float* dErrorMatNextLayer,
     const float* dWeightMatNextLayer,
     const unsigned int numNodesNextLayer,
@@ -279,7 +279,7 @@ void Layer::backPropError(
     // printf( "Err pre: %f\n", sum );
 }
 
-void Layer::computeOutputLayerError(
+void LayerD::computeOutputLayerError(
     const unsigned short* dClassIndexMat,
     cudaStream_t stream )
 {
@@ -303,7 +303,7 @@ void Layer::computeOutputLayerError(
     // printf( "Cost: %f\n", costSum );
 }
 
-void Layer::updateWeights(
+void LayerD::updateWeights(
     const float* dInputMat,
     const float learningParam,
     const float regularParam,
@@ -353,7 +353,7 @@ void Layer::updateWeights(
     // printf( "Back propagate completed, weight sum: %f\n", sum );
 }
 
-float Layer::computeCost(
+float LayerD::computeCost(
     float* dCostMat,
     const unsigned short* dClassIndexMat,
     cudaStream_t stream )
@@ -382,37 +382,37 @@ float Layer::computeCost(
     return costSum;
 }
 
-float* Layer::getDWeightPtr()
+float* LayerD::getDWeightPtr()
 {
     return dWeightMat;
 }
 
-float* Layer::getDOutputPtr()
+float* LayerD::getDOutputPtr()
 {
     return dOutputMat;
 }
 
-float* Layer::getDErrorPtr()
+float* LayerD::getDErrorPtr()
 {
     return dErrorMat;
 }
 
-float* Layer::getWeightPtr()
+float* LayerD::getWeightPtr()
 {
     return weightMat;
 }
 
-float* Layer::getOutputPtr()
+float* LayerD::getOutputPtr()
 {
     return outputMat;
 }
 
-float* Layer::getErrorPtr()
+float* LayerD::getErrorPtr()
 {
     return errorMat;
 }
 
-unsigned int Layer::getNumNodes()
+unsigned int LayerD::getNumNodes()
 {
     return numNodes;
 }

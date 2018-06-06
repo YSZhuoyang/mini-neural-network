@@ -11,11 +11,11 @@
 
 using namespace MyHelper;
 
-class Layer
+class LayerD
 {
 public:
-    Layer();
-    ~Layer();
+    LayerD();
+    ~LayerD();
 
     void init(
         const unsigned int numFeaturesIn,

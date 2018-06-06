@@ -7,6 +7,7 @@ namespace BasicDataStructures
 {
     enum LayerType
     {
+        INPUT_LAYER,
         HIDDEN_LAYER,
         OUTPUT_LAYER
     };
@@ -25,15 +26,40 @@ namespace BasicDataStructures
         float mean;
     };
 
-    struct Node
+    struct LayerKernalConfig
     {
-        float* inputs;
-        // Weight array has numFeatures + 1 elements.
-        // The last element is bias parameter.
-        float* weights;
-        float output;
-        float error;
-        unsigned int numFeatures;
+        dim3 sigBlockDim;
+        dim3 sigGridDim;
+        dim3 ccBlockDim;
+        dim3 ccGridDim;
+    };
+
+    struct ConnectionKernalConfig
+    {
+        dim3 uwBlockDim;
+        dim3 uwGridDim;
+    };
+
+    struct Layer
+    {
+        float* outputMat;
+        float* dOutputMat;
+        float* errorMat;
+        float* dErrorMat;
+        LayerKernalConfig layerKernalConfig;
+        unsigned int numNodes;
+        unsigned int outputMatSize;
+        unsigned int errorMatSize;
+        LayerType layerType;
+    };
+
+    struct Connection
+    {
+        float* weightMat;
+        float* dWeightMat;
+        float* deltaWeightMat;
+        float* dDeltaWeightMat;
+        unsigned int weightMatSize;
     };
 }
 
