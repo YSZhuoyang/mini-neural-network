@@ -3,18 +3,19 @@
 #define _HELPER_H_
 
 #include "BasicDataStructures.h"
-#include <cuda_runtime.h>
-#include "cublas_v2.h"
 #include <stdio.h>
 #include <time.h>
 #include <algorithm>
 #include <vector>
+#include <random>
 
 
 using namespace BasicDataStructures;
 
 namespace MyHelper
 {
+#define NUM_BLOCK_THREADS 128
+
     bool StrEqualCaseSen( const char* str1, const char* str2 );
     bool StrEqualCaseInsen( const char* str1, const char* str2 );
     // Include string terminator

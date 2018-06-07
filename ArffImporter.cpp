@@ -41,9 +41,9 @@ void ArffImporter::BuildFeatureMatrix()
     {
         float* offset = featureMat + i * numFeatures;
         // Set X0 to 1
-        offset[0] = 1.0f;
+        offset[numFeatures - 1] = 1.0f;
         memmove(
-            offset + 1,
+            offset,
             instanceVec[i].featureAttrArray,
             (numFeatures - 1) * sizeof( float ) );
         free( instanceVec[i].featureAttrArray );

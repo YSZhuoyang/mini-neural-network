@@ -1,4 +1,7 @@
 
+#include <cuda_runtime.h>
+#include "cublas_v2.h"
+
 #ifndef _BASIC_DATA_STRUCTURES_H_
 #define _BASIC_DATA_STRUCTURES_H_
 
@@ -26,18 +29,10 @@ namespace BasicDataStructures
         float mean;
     };
 
-    struct LayerKernalConfig
+    struct KernalConfig
     {
-        dim3 sigBlockDim;
-        dim3 sigGridDim;
-        dim3 ccBlockDim;
-        dim3 ccGridDim;
-    };
-
-    struct ConnectionKernalConfig
-    {
-        dim3 uwBlockDim;
-        dim3 uwGridDim;
+        dim3 blockDim;
+        dim3 gridDim;
     };
 
     struct Layer
@@ -46,8 +41,12 @@ namespace BasicDataStructures
         float* dOutputMat;
         float* errorMat;
         float* dErrorMat;
-        LayerKernalConfig layerKernalConfig;
+        KernalConfig sigKernalConfig;
+        KernalConfig ccKernalConfig;
+        // A node is a neuron processor
         unsigned int numNodes;
+        // Includes output of all nodes and bias output which is always 1.0
+        unsigned int numFeatures;
         unsigned int outputMatSize;
         unsigned int errorMatSize;
         LayerType layerType;
@@ -57,9 +56,12 @@ namespace BasicDataStructures
     {
         float* weightMat;
         float* dWeightMat;
-        float* deltaWeightMat;
         float* dDeltaWeightMat;
+        KernalConfig uwKernalConfig;
         unsigned int weightMatSize;
+        unsigned int numFeaturesIn;
+        // Number of output features, which is equal to the number of nodes in the next layer
+        unsigned int numFeaturesOut;
     };
 }
 
