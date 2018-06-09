@@ -5,7 +5,7 @@
 using namespace MyHelper;
 
 
-Connection initConnection(
+Connection initializeConnection(
     const unsigned int numFeaturesIn,
     const unsigned int numFeaturesOut );
 void destroyConnection( const Connection& connection );

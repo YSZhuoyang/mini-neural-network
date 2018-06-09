@@ -37,6 +37,7 @@ namespace BasicDataStructures
 
     struct Layer
     {
+        // Should we keep host data?
         float* outputMat;
         float* dOutputMat;
         float* errorMat;

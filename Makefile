@@ -8,8 +8,8 @@ NVCCCFLAGS = -arch=sm_50 -std=c++11 -O3 -use_fast_math -lcublas
 # Enable host code debug in vscode
 NVCCCFLAGS_DEBUG = -arch=sm_50 -std=c++11 -g -G -use_fast_math -lcublas
 CUFLAGS = -x cu
-OBJECTS = Helper.o ArffImporter.o Layer.o NeuralNetwork.o Main.o
-OBJECTS_DEBUG = Helper_debug.o ArffImporter_debug.o Layer_debug.o NeuralNetwork_debug.o Main_debug.o
+OBJECTS = Helper.o ArffImporter.o Layer.o Connection.o GradientDescent.o MiniNeuralNets.o Main.o
+OBJECTS_DEBUG = Helper_debug.o ArffImporter_debug.o Layer_debug.o Connection_debug.o GradientDescent_debug.o MiniNeuralNets_debug.o Main_debug.o
 
 ############################# Compile exec ##############################
 
@@ -25,12 +25,18 @@ ArffImporter.o: ArffImporter.cpp ArffImporter.h BasicDataStructures.h Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c ArffImporter.cpp
 
 Layer.o: Layer.cpp Layer.h BasicDataStructures.h Helper.o
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Layer.cpp
+	$(NVCC) ${NVCCCFLAGS} -c Layer.cpp
 
-NeuralNetwork.o: NeuralNetwork.cpp NeuralNetwork.h BasicDataStructures.h Layer.o Helper.o
-	$(NVCC) ${NVCCCFLAGS} -c NeuralNetwork.cpp
+Connection.o: Connection.cpp Connection.h BasicDataStructures.h Helper.o
+	$(NVCC) ${NVCCCFLAGS} -c Connection.cpp
 
-Main.o: Main.cpp NeuralNetwork.o Layer.o Helper.o
+GradientDescent.o: GradientDescent.cpp GradientDescent.h BasicDataStructures.h Helper.o
+	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c GradientDescent.cpp
+
+MiniNeuralNets.o: MiniNeuralNets.cpp MiniNeuralNets.h BasicDataStructures.h GradientDescent.o Layer.o Connection.o Helper.o
+	$(NVCC) ${NVCCCFLAGS} -c MiniNeuralNets.cpp
+
+Main.o: Main.cpp MiniNeuralNets.o Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c Main.cpp
 
 ###################### Compile with debug enabled #######################
@@ -47,12 +53,18 @@ ArffImporter_debug.o: ArffImporter.cpp ArffImporter.h BasicDataStructures.h Help
 	$(NVCC) ${NVCCCFLAGS_DEBUG} -c ArffImporter.cpp -o ArffImporter_debug.o
 
 Layer_debug.o: Layer.cpp Layer.h BasicDataStructures.h Helper_debug.o
-	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c Layer.cpp -o Layer_debug.o
+	$(NVCC) ${NVCCCFLAGS_DEBUG} -c Layer.cpp -o Layer_debug.o
 
-NeuralNetwork_debug.o: NeuralNetwork.cpp NeuralNetwork.h BasicDataStructures.h Layer_debug.o Helper_debug.o
-	$(NVCC) ${NVCCCFLAGS_DEBUG} -c NeuralNetwork.cpp -o NeuralNetwork_debug.o
+Connection_debug.o: Connection.cpp Connection.h BasicDataStructures.h Helper_debug.o
+	$(NVCC) ${NVCCCFLAGS_DEBUG} -c Connection.cpp -o Connection_debug.o
 
-Main_debug.o: Main.cpp NeuralNetwork_debug.o Layer_debug.o Helper_debug.o
+GradientDescent_debug.o: GradientDescent.cpp GradientDescent.h BasicDataStructures.h Helper_debug.o
+	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c GradientDescent.cpp -o GradientDescent_debug.o
+
+MiniNeuralNets_debug.o: MiniNeuralNets.cpp MiniNeuralNets.h BasicDataStructures.h GradientDescent_debug.o Layer_debug.o Connection_debug.o Helper_debug.o
+	$(NVCC) ${NVCCCFLAGS_DEBUG} -c MiniNeuralNets.cpp -o MiniNeuralNets_debug.o
+
+Main_debug.o: Main.cpp MiniNeuralNets_debug.o Helper_debug.o
 	$(NVCC) ${NVCCCFLAGS_DEBUG} -c Main.cpp -o Main_debug.o
 
 ################################# Clean #################################

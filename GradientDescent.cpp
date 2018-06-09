@@ -51,7 +51,7 @@ __global__ void UpdateWeightMat(
     if (eleId >= weightMatSize) return;
 
     // Add regularization term excluding bias term
-    float regularTerm = (eleId % numFeaturesIn == 0) ?
+    float regularTerm = ((eleId + 1) % numFeaturesIn == 0) ?
         0.0f : regularParam * dWeightMat[eleId];
     dWeightMat[eleId] += learningParam * (dDeltaWeightMat[eleId] + regularTerm);
 }
@@ -124,24 +124,24 @@ void backPropError(
         CUBLAS_OP_T,
         numInstances,
         // Exclude bias
-        sourceLayer.numNodes,
-        targetLayer.numNodes,//numNodesNextLayer,
+        targetLayer.numNodes,
+        sourceLayer.numNodes,//numNodesNextLayer,
         &alpha,
-        targetLayer.dErrorMat,//dErrorMatNextLayer,
+        sourceLayer.dErrorMat,//dErrorMatNextLayer,
         numInstances,
         connection.dWeightMat,//dWeightMatNextLayer + 1,
-        sourceLayer.numFeatures,
+        targetLayer.numFeatures,
         &beta,
-        sourceLayer.dErrorMat,
+        targetLayer.dErrorMat,
         numInstances ) );
     BackPropError<<<
-        sourceLayer.sigKernalConfig.gridDim,
-        sourceLayer.sigKernalConfig.blockDim,
+        targetLayer.sigKernalConfig.gridDim,
+        targetLayer.sigKernalConfig.blockDim,
         0,
         stream >>>(
-            sourceLayer.dErrorMat,
-            sourceLayer.dOutputMat,// + numInstances,
-            sourceLayer.errorMatSize );
+            targetLayer.dErrorMat,
+            targetLayer.dOutputMat,// + numInstances,
+            targetLayer.errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
 }
 
@@ -163,16 +163,11 @@ void computeOutputLayerError(
             dClassIndexMat,
             outputLayer.errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
-
-    // Sum up cost
-    // For testing gradient descent
-    // float costSum =
-    //     layerArr[numHiddenLayers].computeCost( dClassIndexMat, dCostMat, stream1 );
-    // printf( "Cost: %f\n", costSum );
 }
 
 void updateWeights(
     const Layer& sourceLayer,
+    const Layer& targetLayer,
     const Connection& connection,
     const unsigned int numInstances,
     const float learningParam,
@@ -192,7 +187,7 @@ void updateWeights(
         connection.numFeaturesOut,
         numInstances,
         &alpha,
-        sourceLayer.dOutputMat, //dInputMat,
+        targetLayer.dOutputMat, //dInputMat,
         numInstances,
         sourceLayer.dErrorMat,
         numInstances,
@@ -226,4 +221,36 @@ void updateWeights(
     //     sum += weightMat[i];
 
     // printf( "Back propagate completed, weight sum: %f\n", sum );
+}
+
+float computeCost(
+    float* dCostMat,
+    const unsigned short* dClassIndexMat,
+    const Layer& outputLayer,
+    cublasHandle_t cublasHandle,
+    cudaStream_t stream )
+{
+    if (outputLayer.layerType != OUTPUT_LAYER)
+        throw( "computeCost() can only be called by output layer.\n" );
+
+    float costSum = 0.0f;
+    ComputeCost<<<
+        outputLayer.sigKernalConfig.gridDim,
+        outputLayer.sigKernalConfig.blockDim,
+        0,
+        stream >>>(
+            dCostMat,
+            outputLayer.dOutputMat,
+            dClassIndexMat,
+            outputLayer.outputMatSize );
+    cudaErrorCheck( cudaGetLastError() );
+    // Sum up absolute values
+    cublasErrorCheck( cublasSasum(
+        cublasHandle,
+        outputLayer.outputMatSize,
+        dCostMat,
+        1,
+        &costSum ) );
+    
+    return costSum;
 }

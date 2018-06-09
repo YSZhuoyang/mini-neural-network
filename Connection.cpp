@@ -2,7 +2,7 @@
 #include "Connection.h"
 
 
-Connection initConnection(
+Connection initializeConnection(
     const unsigned int numFeaturesIn,
     const unsigned int numFeaturesOut )
 {
@@ -23,7 +23,7 @@ Connection initConnection(
 
     const float scalar = sqrtf(2.0f / (float) numFeaturesIn);
     for (unsigned int i = 0; i < weightMatSize; i++)
-        weightMat[i] = (i % (numFeaturesIn - 1) == 0) ? 0.0f : normalDist(generator) * scalar;
+        weightMat[i] = ((i + 1) % numFeaturesIn == 0) ? 0.0f : normalDist(generator) * scalar;
 
     cudaErrorCheck( cudaMemcpyAsync(
         dWeightMat,
@@ -50,6 +50,7 @@ Connection initConnection(
     connection.numFeaturesIn = numFeaturesIn;
     connection.numFeaturesOut = numFeaturesOut;
     connection.weightMat = weightMat;
+    connection.dWeightMat = dWeightMat;
     connection.dDeltaWeightMat = dDeltaWeightMat;
     connection.uwKernalConfig = uwKernalConfig;
 

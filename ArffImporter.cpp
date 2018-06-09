@@ -27,8 +27,8 @@ void ArffImporter::BuildFeatureMatrix()
     if (featureMat != nullptr || featureMatTrans != nullptr)
         return;
 
-    // Include X0 to be multiplied with bias    
-    numFeatures++;
+    // Training data does not contain bias X0, which is added in the
+    // input layer of the neural nets
     const unsigned short classIndexMatNumRows = (numClasses == 2) ? 1 : numClasses;
     featureMat =
         (float*) malloc( numInstances * numFeatures * sizeof( float ) );
@@ -40,12 +40,10 @@ void ArffImporter::BuildFeatureMatrix()
     for (unsigned int i = 0; i < numInstances; i++)
     {
         float* offset = featureMat + i * numFeatures;
-        // Set X0 to 1
-        offset[numFeatures - 1] = 1.0f;
         memmove(
             offset,
             instanceVec[i].featureAttrArray,
-            (numFeatures - 1) * sizeof( float ) );
+            numFeatures * sizeof( float ) );
         free( instanceVec[i].featureAttrArray );
 
         if (numClasses > 2)
