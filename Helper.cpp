@@ -3,7 +3,7 @@
 
 
 Instance MyHelper::Tokenize(
-    const char* str, 
+    const char* str,
     const std::vector<NumericAttr>& featureVec )
 {
     unsigned int numFeatures = featureVec.size();

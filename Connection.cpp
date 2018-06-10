@@ -2,7 +2,7 @@
 #include "Connection.h"
 
 
-Connection initializeConnection(
+Connection MiniNeuralNetwork::initializeConnection(
     const unsigned int numFeaturesIn,
     const unsigned int numFeaturesOut )
 {
@@ -57,7 +57,7 @@ Connection initializeConnection(
     return connection;
 }
 
-void destroyConnection( const Connection& connection )
+void MiniNeuralNetwork::destroyConnection( const Connection& connection )
 {
     free(connection.weightMat);
     cudaErrorCheck( cudaFree( connection.dWeightMat ) );

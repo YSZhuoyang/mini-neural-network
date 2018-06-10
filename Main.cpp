@@ -26,6 +26,8 @@ int main()
         (numClasses == 2) ? 1 : numClasses
     };
 
+    using namespace MiniNeuralNetwork;
+
     MiniNeuralNets miniNeuralNets;
     miniNeuralNets.initialize(
         architecture,

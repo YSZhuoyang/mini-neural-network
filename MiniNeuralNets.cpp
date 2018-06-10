@@ -2,12 +2,12 @@
 #include "MiniNeuralNets.h"
 
 
-MiniNeuralNets::MiniNeuralNets()
+MiniNeuralNetwork::MiniNeuralNets::MiniNeuralNets()
 {
 
 }
 
-MiniNeuralNets::~MiniNeuralNets()
+MiniNeuralNetwork::MiniNeuralNets::~MiniNeuralNets()
 {
     cudaErrorCheck( cudaEventDestroy( trainingComplete ) );
     cudaErrorCheck( cudaEventDestroy( testComplete ) );
@@ -29,7 +29,7 @@ MiniNeuralNets::~MiniNeuralNets()
     architecture = nullptr;
 }
 
-void MiniNeuralNets::initialize(
+void MiniNeuralNetwork::MiniNeuralNets::initialize(
     const std::vector<unsigned int>& architecture,
     cublasHandle_t cublasHandle )
 {
@@ -70,7 +70,7 @@ void MiniNeuralNets::initialize(
             cudaEventDisableTiming ) );
 }
 
-void MiniNeuralNets::train(
+void MiniNeuralNetwork::MiniNeuralNets::train(
     const float* trainingFeatureMat,
     const unsigned short* classIndexMat,
     const unsigned int numInstances,
@@ -166,7 +166,7 @@ void MiniNeuralNets::train(
     dCostMat = nullptr;
 }
 
-void MiniNeuralNets::test(
+void MiniNeuralNetwork::MiniNeuralNets::test(
     const float* testFeatureMat,
     const unsigned short* classIndexMat,
     const unsigned int numInstances )
@@ -262,7 +262,7 @@ void MiniNeuralNets::test(
     dClassIndexMat = nullptr;
 }
 
-inline void MiniNeuralNets::forwardProp(
+inline void MiniNeuralNetwork::MiniNeuralNets::forwardProp(
     const unsigned int numInstances,
     cudaStream_t stream1 )
 {
@@ -279,7 +279,7 @@ inline void MiniNeuralNets::forwardProp(
     }
 }
 
-inline void MiniNeuralNets::backwardProp(
+inline void MiniNeuralNetwork::MiniNeuralNets::backwardProp(
     const unsigned short* dClassIndexMat,
     const unsigned int numInstances,
     const float learningParam,

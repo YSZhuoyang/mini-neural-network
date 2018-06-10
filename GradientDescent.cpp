@@ -3,7 +3,7 @@
 
 
 __global__ void Sigmid(
-    float* __restrict__ dOutputMat,//dOutputMatOffset
+    float* __restrict__ dOutputMat,
     const unsigned int subMatSize )
 {
     const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
@@ -15,7 +15,7 @@ __global__ void Sigmid(
 
 __global__ void BackPropError(
     float* __restrict__ dErrorMat,
-    const float* __restrict__ dOutputMat,//dOutputMatOffset
+    const float* __restrict__ dOutputMat,
     const unsigned int errorMatSize )
 {
     const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
@@ -68,7 +68,7 @@ __global__ void ComputeCost(
         -logf(dOutputMat[eleId]) : -logf(1.0f - dOutputMat[eleId]);
 }
 
-void forwardOutput(
+void MiniNeuralNetwork::forwardOutput(
     const Layer& sourceLayer,
     const Layer& targetLayer,
     const Connection& connection,
@@ -84,7 +84,7 @@ void forwardOutput(
         CUBLAS_OP_N,
         CUBLAS_OP_N,
         numInstances,
-        connection.numFeaturesOut,// numNodes,
+        connection.numFeaturesOut,
         connection.numFeaturesIn,
         &alpha,
         sourceLayer.dOutputMat,
@@ -92,20 +92,20 @@ void forwardOutput(
         connection.dWeightMat,
         connection.numFeaturesIn,
         &beta,
-        targetLayer.dOutputMat,// dOutputMatOffset,
+        targetLayer.dOutputMat,
         numInstances ) );
     Sigmid<<<
         targetLayer.sigKernalConfig.gridDim,
         targetLayer.sigKernalConfig.blockDim,
         0,
         stream >>>(
-            targetLayer.dOutputMat,// dOutputMatOffset
+            targetLayer.dOutputMat,
             // Error mat size = output mat size without X0s
             targetLayer.errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
 }
 
-void backPropError(
+void MiniNeuralNetwork::backPropError(
     const Layer& sourceLayer,
     const Layer& targetLayer,
     const Connection& connection,
@@ -123,11 +123,11 @@ void backPropError(
         numInstances,
         // Exclude bias
         targetLayer.numNodes,
-        sourceLayer.numNodes,//numNodesNextLayer,
+        sourceLayer.numNodes,
         &alpha,
-        sourceLayer.dErrorMat,//dErrorMatNextLayer,
+        sourceLayer.dErrorMat,
         numInstances,
-        connection.dWeightMat,//dWeightMatNextLayer + 1,
+        connection.dWeightMat,
         targetLayer.numFeatures,
         &beta,
         targetLayer.dErrorMat,
@@ -138,12 +138,12 @@ void backPropError(
         0,
         stream >>>(
             targetLayer.dErrorMat,
-            targetLayer.dOutputMat,// + numInstances,
+            targetLayer.dOutputMat,
             targetLayer.errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
 }
 
-void computeOutputLayerError(
+void MiniNeuralNetwork::computeOutputLayerError(
     const unsigned short* dClassIndexMat,
     const Layer& outputLayer,
     cudaStream_t stream )
@@ -163,7 +163,7 @@ void computeOutputLayerError(
     cudaErrorCheck( cudaGetLastError() );
 }
 
-void updateWeights(
+void MiniNeuralNetwork::updateWeights(
     const Layer& sourceLayer,
     const Layer& targetLayer,
     const Connection& connection,
@@ -181,11 +181,11 @@ void updateWeights(
         cublasHandle,
         CUBLAS_OP_T,
         CUBLAS_OP_N,
-        connection.numFeaturesIn,// numFeaturesIn,
+        connection.numFeaturesIn,
         connection.numFeaturesOut,
         numInstances,
         &alpha,
-        targetLayer.dOutputMat, //dInputMat,
+        targetLayer.dOutputMat,
         numInstances,
         sourceLayer.dErrorMat,
         numInstances,
@@ -221,7 +221,7 @@ void updateWeights(
     // printf( "Back propagate completed, weight sum: %f\n", sum );
 }
 
-float computeCost(
+float MiniNeuralNetwork::computeCost(
     float* dCostMat,
     const unsigned short* dClassIndexMat,
     const Layer& outputLayer,

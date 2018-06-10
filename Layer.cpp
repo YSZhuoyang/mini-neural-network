@@ -2,7 +2,7 @@
 #include "Layer.h"
 
 
-Layer initializeLayer(
+Layer MiniNeuralNetwork::initializeLayer(
     const unsigned int numFeatures,
     const unsigned int numInstances,
     const LayerType layerType)
@@ -75,7 +75,7 @@ Layer initializeLayer(
     return layer;
 }
 
-void destroyLayer( const Layer& layer )
+void MiniNeuralNetwork::destroyLayer( const Layer& layer )
 {
     free( layer.outputMat );
     free( layer.errorMat );
