@@ -1,6 +1,5 @@
 
 #include "ArffImporter.h"
-// #include "NeuralNetwork.h"
 #include "MiniNeuralNets.h"
 
 
