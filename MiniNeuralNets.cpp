@@ -249,6 +249,7 @@ inline void MiniNeuralNets::forwardProp(
             stream );
     }
 
+    // Only needed for training
     computeOutputLayerError(dClassIndexMat, layers[numLayers - 1], stream);
     cudaErrorCheck( cudaEventRecord( forwardPropComplete, stream ) );
 }

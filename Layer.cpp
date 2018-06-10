@@ -17,30 +17,18 @@ Layer initializeLayer(
     unsigned int errorMatSize = numNodes * numInstances;
 
     /* Determine block and grid size of kernel functions */
-    dim3 ccBlockDim;
-    dim3 ccGridDim;
-    dim3 sigBlockDim;
-    dim3 sigGridDim;
-    if (outputMatSize > NUM_BLOCK_THREADS)
-    {
-        ccBlockDim.x = NUM_BLOCK_THREADS;
-        ccGridDim.x = (outputMatSize + NUM_BLOCK_THREADS - 1) / NUM_BLOCK_THREADS;
-    }
-    else ccBlockDim.x = outputMatSize;
-
+    dim3 blockDim;
+    dim3 gridDim;
     if (errorMatSize > NUM_BLOCK_THREADS)
     {
-        sigBlockDim.x = NUM_BLOCK_THREADS;
-        sigGridDim.x = (errorMatSize + NUM_BLOCK_THREADS - 1) / NUM_BLOCK_THREADS;
+        blockDim.x = NUM_BLOCK_THREADS;
+        gridDim.x = (errorMatSize + NUM_BLOCK_THREADS - 1) / NUM_BLOCK_THREADS;
     }
-    else sigBlockDim.x = errorMatSize;
+    else blockDim.x = errorMatSize;
 
-    KernalConfig ccKernalConfig;
-    ccKernalConfig.blockDim = ccBlockDim;
-    ccKernalConfig.gridDim = ccGridDim;
-    KernalConfig sigKernalConfig;
-    sigKernalConfig.blockDim = sigBlockDim;
-    sigKernalConfig.gridDim = sigGridDim;
+    KernalConfig kernalConfig;
+    kernalConfig.blockDim = blockDim;
+    kernalConfig.gridDim = gridDim;
 
     /* Init host buffer data */
     float* errorMat = (float*) malloc( errorMatSize * sizeof( float ) );
@@ -52,8 +40,8 @@ Layer initializeLayer(
     cudaErrorCheck( cudaMalloc( (void**) &dOutputMat, outputMatSize * sizeof( float ) ) );
     cudaErrorCheck( cudaMalloc( (void**) &dErrorMat, errorMatSize * sizeof( float ) ) );
 
-    // Setup bias in non-output layer
-    if (layerType == HIDDEN_LAYER)
+    // Init bias input in non-output layer
+    if (layerType != OUTPUT_LAYER)
     {
         const unsigned int biasInputOffset = numInstances * numNodes;
         float* outputMatOffset = outputMat + biasInputOffset;
@@ -61,7 +49,7 @@ Layer initializeLayer(
         // Fill the first feature with X0 for bias
         for (unsigned int i = 0; i < numInstances; i++)
             outputMatOffset[i] = 1.0f;
-        
+
         // Fill in with X0 as bias
         cudaErrorCheck( cudaMemcpyAsync(
             dOutputMatOffset,
@@ -72,8 +60,6 @@ Layer initializeLayer(
 
     Layer layer;
     layer.layerType = layerType;
-    layer.sigKernalConfig = sigKernalConfig;
-    layer.ccKernalConfig = ccKernalConfig;
     layer.outputMat = outputMat;
     layer.dOutputMat = dOutputMat;
     layer.errorMat = errorMat;
@@ -82,6 +68,9 @@ Layer initializeLayer(
     layer.numFeatures = numFeatures;
     layer.outputMatSize = outputMatSize;
     layer.errorMatSize = errorMatSize;
+    layer.sigKernalConfig = kernalConfig;
+    if (layerType == OUTPUT_LAYER)
+        layer.ccKernalConfig = kernalConfig;
 
     return layer;
 }

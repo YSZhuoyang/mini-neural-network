@@ -6,7 +6,7 @@ __global__ void Sigmid(
     float* __restrict__ dOutputMat,//dOutputMatOffset
     const unsigned int subMatSize )
 {
-    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= subMatSize) return;
 
     float output = dOutputMat[eleId];
@@ -18,7 +18,7 @@ __global__ void BackPropError(
     const float* __restrict__ dOutputMat,//dOutputMatOffset
     const unsigned int errorMatSize )
 {
-    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= errorMatSize) return;
 
     float error = dOutputMat[eleId] * (1.0f - dOutputMat[eleId]);
@@ -31,12 +31,10 @@ __global__ void ComputeOutputLayerError(
     const unsigned short* __restrict__ dClassIndexMat,
     const unsigned int errorMatSize )
 {
-    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= errorMatSize) return;
 
-    float output = dOutputMat[eleId];
-    // For training
-    dErrorMat[eleId] = output - (float) dClassIndexMat[eleId];
+    dErrorMat[eleId] = dOutputMat[eleId] - (float) dClassIndexMat[eleId];
 }
 
 __global__ void UpdateWeightMat(
@@ -47,7 +45,7 @@ __global__ void UpdateWeightMat(
     const unsigned int numFeaturesIn,
     const unsigned int weightMatSize )
 {
-    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= weightMatSize) return;
 
     // Add regularization term excluding bias term
@@ -62,7 +60,7 @@ __global__ void ComputeCost(
     const unsigned short* __restrict__ dClassIndexMat,
     const unsigned int costMatSize )
 {
-    unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= costMatSize) return;
 
     // Note that each element in dCostMat is always > 0
