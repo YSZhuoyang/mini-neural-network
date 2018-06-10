@@ -40,6 +40,7 @@ void MiniNeuralNetwork::MiniNeuralNets::initialize(
     numLayers = architecture.size();
     numHiddenLayers = numLayers - 2;
     numConnections = numLayers - 1;
+    layers = new Layer[numLayers];
 
     connections = new Connection[numConnections];
     for (unsigned short i = 0; i < numConnections; i++)
@@ -80,7 +81,6 @@ void MiniNeuralNetwork::MiniNeuralNets::train(
     const float costThreshold )
 {
     // Allocate output memory in each layer
-    layers = new Layer[numLayers];
     for (unsigned short i = 0; i < numLayers; i++)
     {
         const LayerType layerType = (i == 0)
@@ -172,7 +172,6 @@ void MiniNeuralNetwork::MiniNeuralNets::test(
     const unsigned int numInstances )
 {
     // Allocate output memory in each layer
-    layers = new Layer[numLayers];
     for (unsigned short i = 0; i < numLayers; i++)
     {
         const LayerType layerType = (i == 0)
