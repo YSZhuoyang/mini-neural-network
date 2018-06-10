@@ -1,4 +1,7 @@
 
+#ifndef _CONNECTION_H_
+#define _CONNECTION_H_
+
 #include "Helper.h"
 
 
@@ -11,3 +14,5 @@ namespace MiniNeuralNetwork
         const unsigned int numFeaturesOut );
     void destroyConnection( const Connection& connection );
 }
+
+#endif

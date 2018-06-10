@@ -1,10 +1,10 @@
 
+#ifndef _MINI_NEURAL_NETS_H_
+#define _MINI_NEURAL_NETS_H_
+
 #include "Layer.h"
 #include "Connection.h"
 #include "GradientDescent.h"
-
-#ifndef _MINI_NEURAL_NETS_H_
-#define _MINI_NEURAL_NETS_H_
 
 namespace MiniNeuralNetwork
 {
