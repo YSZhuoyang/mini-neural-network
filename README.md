@@ -4,22 +4,20 @@ A general perception neural network written in CUDA.
 
 ## Variable Explanation
 
-        Note: Input layer is described as inputFeatureMatrix which is not included below.
+                                 inputLayer   hiddenLayers   outputLayer
+                                      |             |             |
+                                      |       -------------       |
+                                      |       |           |       |
 
-                                      hiddenLayers   outputLayer
-                                            |             |
-                                      -------------       |
-                                      |           |       |
-        
-             ------  biasInput -----  *   *   *
+             ------  biasInput -----  *       *   *   *
              |
-             |           -----------  *   *   *   *
-        numFeatures      |            *   *   *   *       *
-             |        numNodes        *   *   *   *       *
-             |           |            *   *   *   *       *
-             |           |            *   *   *   *
-             ------      -----------  *   *   *
+             |           -----------  *       *   *   *   *
+        numFeatures      |            *       *   *   *   *       *
+             |        numNodes        *       *   *   *   *       *
+             |           |            *       *   *   *   *       *
+             |           |            *       *   *   *   *
+             ------      -----------  *       *   *   *
 
-                                      |                   |
-                                      |                   |
-                                      |-----numLayers-----|
+                                      |                           |
+                                      |                           |
+                                      |---------numLayers---------|
