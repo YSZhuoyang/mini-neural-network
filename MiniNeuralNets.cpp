@@ -17,8 +17,6 @@ MiniNeuralNets::~MiniNeuralNets()
     free( backPropCompletes );
     backPropCompletes = nullptr;
 
-    for (unsigned short i = 0; i < numLayers; i++)
-        destroyLayer(layers[i]);
     for (unsigned short i = 0; i < numConnections; i++)
         destroyConnection(connections[i]);
 
@@ -33,33 +31,25 @@ MiniNeuralNets::~MiniNeuralNets()
 
 void MiniNeuralNets::initialize(
     const std::vector<unsigned int>& architecture,
-    const unsigned int numInstances,
     cublasHandle_t cublasHandle )
 {
     this->cublasHandle = cublasHandle;
-    this->numInstances = numInstances;
     this->architecture = (unsigned int*) malloc( architecture.size() * sizeof( unsigned int ) );
     std::copy( architecture.begin(), architecture.end(), this->architecture );
 
-    // Number of layers excluding input layer
     numLayers = architecture.size();
     numHiddenLayers = numLayers - 2;
     numConnections = numLayers - 1;
 
-    layers = new Layer[numLayers];
-    for (unsigned short i = 0; i < numLayers; i++)
-    {
-        const LayerType layerType = (i == 0)
-            ? INPUT_LAYER
-            : (i == numLayers - 1)
-                ? OUTPUT_LAYER
-                : HIDDEN_LAYER;
-        layers[i] = initializeLayer(architecture[i], numInstances, layerType);
-    }
-
     connections = new Connection[numConnections];
     for (unsigned short i = 0; i < numConnections; i++)
-        connections[i] = initializeConnection(layers[i].numFeatures, layers[i + 1].numNodes);
+    {
+        const unsigned int numFeaturesIn = architecture[i];
+        const unsigned int numFeaturesOut = (i == numConnections - 1)
+            ? architecture[i + 1]
+            : architecture[i + 1] - 1;
+        connections[i] = initializeConnection(numFeaturesIn, numFeaturesOut);
+    }
 
     cudaErrorCheck( cudaEventCreateWithFlags(
         &trainingComplete,
@@ -83,11 +73,24 @@ void MiniNeuralNets::initialize(
 void MiniNeuralNets::train(
     const float* trainingFeatureMat,
     const unsigned short* classIndexMat,
+    const unsigned int numInstances,
     const unsigned int maxIter,
     const float learningRate,
     const float regularParam,
     const float costThreshold )
 {
+    // Allocate output memory in each layer
+    layers = new Layer[numLayers];
+    for (unsigned short i = 0; i < numLayers; i++)
+    {
+        const LayerType layerType = (i == 0)
+            ? INPUT_LAYER
+            : (i == numLayers - 1)
+                ? OUTPUT_LAYER
+                : HIDDEN_LAYER;
+        layers[i] = initializeLayer(architecture[i], numInstances, layerType);
+    }
+
     /******** Init device training data ********/
 
     const unsigned int classIndexMatSize = numInstances * layers[numLayers - 1].numNodes;
@@ -124,8 +127,14 @@ void MiniNeuralNets::train(
     unsigned int iter = 0;
     while (iter++ < maxIter)
     {
-        forwardProp( dClassIndexMat, stream1 );
-        backwardProp( learningParam, regularParam, stream1, stream2 );
+        forwardProp( numInstances, stream1 );
+        backwardProp(
+            dClassIndexMat,
+            numInstances,
+            learningParam,
+            regularParam,
+            stream1,
+            stream2 );
 
         printf( "\n" );
     }
@@ -144,6 +153,10 @@ void MiniNeuralNets::train(
         stream1 );
     printf( "Cost: %f\n", costSum );
 
+    // Release output memory in each layer
+    for (unsigned short i = 0; i < numLayers; i++)
+        destroyLayer(layers[i]);
+
     // Release training resources
     cudaErrorCheck( cudaStreamDestroy( stream1 ) );
     cudaErrorCheck( cudaStreamDestroy( stream2 ) );
@@ -158,6 +171,18 @@ void MiniNeuralNets::test(
     const unsigned short* classIndexMat,
     const unsigned int numInstances )
 {
+    // Allocate output memory in each layer
+    layers = new Layer[numLayers];
+    for (unsigned short i = 0; i < numLayers; i++)
+    {
+        const LayerType layerType = (i == 0)
+            ? INPUT_LAYER
+            : (i == numLayers - 1)
+                ? OUTPUT_LAYER
+                : HIDDEN_LAYER;
+        layers[i] = initializeLayer(architecture[i], numInstances, layerType);
+    }
+
     // Init cuda stream resources
     cudaStream_t stream;
     cudaErrorCheck( cudaStreamCreate( &stream ) );
@@ -188,7 +213,7 @@ void MiniNeuralNets::test(
     /*******************************************/
 
     // Classify
-    forwardProp( dClassIndexMat, stream );
+    forwardProp( numInstances, stream );
 
     // Compute accuracy
     unsigned int correctCounter = 0;
@@ -227,6 +252,10 @@ void MiniNeuralNets::test(
     printf( "Accuracy: %f\n", (float) correctCounter / (float) numInstances );
     cudaErrorCheck( cudaEventRecord( testComplete, stream ) );
 
+    // Release output memory in each layer
+    for (unsigned short i = 0; i < numLayers; i++)
+        destroyLayer(layers[i]);
+
     // Release test resources
     cudaErrorCheck( cudaStreamDestroy( stream ) );
     cudaErrorCheck( cudaFree( dClassIndexMat ) );
@@ -234,8 +263,8 @@ void MiniNeuralNets::test(
 }
 
 inline void MiniNeuralNets::forwardProp(
-    const unsigned short* dClassIndexMat,
-    cudaStream_t stream )
+    const unsigned int numInstances,
+    cudaStream_t stream1 )
 {
     for (unsigned short i = 0; i < numConnections; i++)
     {
@@ -246,20 +275,20 @@ inline void MiniNeuralNets::forwardProp(
             connections[i],
             numInstances,
             cublasHandle,
-            stream );
+            stream1 );
     }
-
-    // Only needed for training
-    computeOutputLayerError(dClassIndexMat, layers[numLayers - 1], stream);
-    cudaErrorCheck( cudaEventRecord( forwardPropComplete, stream ) );
 }
 
 inline void MiniNeuralNets::backwardProp(
+    const unsigned short* dClassIndexMat,
+    const unsigned int numInstances,
     const float learningParam,
     const float regularParam,
     cudaStream_t stream1,
     cudaStream_t stream2 )
 {
+    computeOutputLayerError(dClassIndexMat, layers[numLayers - 1], stream1);
+    cudaErrorCheck( cudaEventRecord( forwardPropComplete, stream1 ) );
     cudaErrorCheck( cudaStreamWaitEvent( stream2, forwardPropComplete, 0 ) );
 
     for (unsigned short i = numHiddenLayers; i > 0; i--)

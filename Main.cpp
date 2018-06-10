@@ -29,7 +29,6 @@ int main()
     MiniNeuralNets miniNeuralNets;
     miniNeuralNets.initialize(
         architecture,
-        trainSetImporter.GetNumInstances(),
         cublasHandle );
 
     time_t start, end;
@@ -39,6 +38,7 @@ int main()
     miniNeuralNets.train(
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndexMat(),
+        trainSetImporter.GetNumInstances(),
         8000,
         0.2f,
         0.0f,

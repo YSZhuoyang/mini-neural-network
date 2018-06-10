@@ -17,11 +17,11 @@ public:
         // An array of length which equals to numLayers + 1, and
         // all layers except output layer include bias input X0
         const std::vector<unsigned int>& architecture,
-        const unsigned int numInstances,
         cublasHandle_t cublasHandle );
     void train(
         const float* featureMat,
         const unsigned short* classIndexMat,
+        const unsigned int numInstances,
         const unsigned int maxIter,
         const float learningRate,
         const float regularParam,
@@ -33,9 +33,11 @@ public:
 
 private:
     inline void forwardProp(
-        const unsigned short* dClassIndexMat,
-        cudaStream_t stream );
+        const unsigned int numInstances,
+        cudaStream_t stream1 );
     inline void backwardProp(
+        const unsigned short* dClassIndexMat,
+        const unsigned int numInstances,
         const float learningParam,
         const float regularParam,
         cudaStream_t stream1,
@@ -50,7 +52,6 @@ private:
     unsigned short numLayers         = 0;
     unsigned short numHiddenLayers   = 0;
     unsigned short numConnections    = 0;
-    unsigned int numInstances        = 0;
 
     cudaEvent_t* backPropCompletes   = nullptr;
     cudaEvent_t forwardPropComplete;
