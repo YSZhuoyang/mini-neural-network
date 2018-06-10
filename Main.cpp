@@ -1,6 +1,7 @@
 
 #include "ArffImporter.h"
-#include "NeuralNetwork.h"
+// #include "NeuralNetwork.h"
+#include "MiniNeuralNets.h"
 
 
 int main()
@@ -15,25 +16,28 @@ int main()
     cublasHandle_t cublasHandle;
     cublasErrorCheck( cublasCreate( &cublasHandle ) );
 
-    // Number of layers excluding input layer
-    const unsigned int numLayers = 2;
+    // Specify architecture
     const unsigned int numClasses = trainSetImporter.GetNumClasses();
-    unsigned int architecture[numLayers + 1];
     // Number of features in each layer including input layer
-    architecture[0] = trainSetImporter.GetNumFeatures();
-    architecture[1] = 7;
-    architecture[2] = (numClasses == 2) ? 1 : numClasses;
-    NeuralNetwork neuralNetwork;
-    neuralNetwork.initLayers(
+    std::vector<unsigned int> architecture
+    {
+        trainSetImporter.GetNumFeatures() + 1,
+        7,
+        (numClasses == 2) ? 1 : numClasses
+    };
+
+    using namespace MiniNeuralNetwork;
+
+    MiniNeuralNets miniNeuralNets;
+    miniNeuralNets.initialize(
         architecture,
-        numLayers,
         cublasHandle );
 
     time_t start, end;
     double dif;
     time( &start );
 
-    neuralNetwork.train(
+    miniNeuralNets.train(
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndexMat(),
         trainSetImporter.GetNumInstances(),
@@ -46,7 +50,7 @@ int main()
     dif = difftime( end, start );
     printf( "Time taken: %.2lf seconds.\n", dif );
 
-    neuralNetwork.test(
+    miniNeuralNets.test(
         testSetImporter.GetFeatureMatTrans(),
         testSetImporter.GetClassIndexMat(),
         testSetImporter.GetNumInstances() );

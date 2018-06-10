@@ -27,8 +27,8 @@ void ArffImporter::BuildFeatureMatrix()
     if (featureMat != nullptr || featureMatTrans != nullptr)
         return;
 
-    // Include X0 to be multiplied with bias    
-    numFeatures++;
+    // Training data does not contain bias X0, which is added in the
+    // input layer of the neural nets
     const unsigned short classIndexMatNumRows = (numClasses == 2) ? 1 : numClasses;
     featureMat =
         (float*) malloc( numInstances * numFeatures * sizeof( float ) );
@@ -40,12 +40,10 @@ void ArffImporter::BuildFeatureMatrix()
     for (unsigned int i = 0; i < numInstances; i++)
     {
         float* offset = featureMat + i * numFeatures;
-        // Set X0 to 1
-        offset[0] = 1.0f;
         memmove(
-            offset + 1,
+            offset,
             instanceVec[i].featureAttrArray,
-            (numFeatures - 1) * sizeof( float ) );
+            numFeatures * sizeof( float ) );
         free( instanceVec[i].featureAttrArray );
 
         if (numClasses > 2)
@@ -61,18 +59,17 @@ void ArffImporter::BuildFeatureMatrix()
 
 void ArffImporter::Normalize()
 {
-    // Do not normalize X0
-    for (unsigned int i = 1; i < numFeatures; i++)
+    for (unsigned int i = 0; i < numFeatures; i++)
     {
         // Use either range / standard deviation
-        float range = featureVec[i - 1].max - featureVec[i - 1].min;
+        float range = featureVec[i].max - featureVec[i].min;
         if (range == 0.0f) continue;
 
         for (unsigned int j = 0; j < numInstances; j++)
         {
             unsigned int featureIndex = j * numFeatures + i;
             featureMat[featureIndex] =
-                (featureMat[featureIndex] - featureVec[i - 1].mean) / range;
+                (featureMat[featureIndex] - featureVec[i].mean) / range;
         }
     }
 }

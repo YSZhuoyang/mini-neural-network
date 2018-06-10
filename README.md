@@ -7,25 +7,24 @@ A general perception neural network written in CUDA.
 This Gradient Descent algorithm was implemented based on equations from [Machine Learning on Coursera](https://www.coursera.org/learn/machine-learning).
 
 ### Gragh representation
-        Note: Input layer is described as inputFeatureMatrix which is not included below.
 
-                                      hiddenLayers   outputLayer
-                                            |             |
-                                      -------------       |
-                                      |           |       |
-        
-             ------  biasInput -----  *   *   *   *
+                                 inputLayer   hiddenLayers   outputLayer
+                                      |             |             |
+                                      |       -------------       |
+                                      |       |           |       |
+
+             ------  biasInput -----  *       *   *   *
              |
-             |           -----------  *   *   *
-        numFeatures      |            *   *   *   *       *
-             |        numNodes        *   *   *   *       *
-             |           |            *   *   *   *       *
-             |           |            *   *   *   *
-             ------      -----------  *   *   *
+             |           -----------  *       *   *   *   *
+        numFeatures      |            *       *   *   *   *       *
+             |        numNodes        *       *   *   *   *       *
+             |           |            *       *   *   *   *       *
+             |           |            *       *   *   *   *
+             ------      -----------  *       *   *   *
 
-                                      |                   |
-                                      |                   |
-                                      |-----numLayers-----|
+                                      |                           |
+                                      |                           |
+                                      |---------numLayers---------|
 
     * (Node): each node * has an input, an output and an error associated with, input of a bias node is always 1.
     Connection: each connection between a pair of nodes has a weight and an accumulated deltaWeight associated with.
