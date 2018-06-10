@@ -1,4 +1,7 @@
 
+#ifndef _GRADIENT_DESCENT_H_
+#define _GRADIENT_DESCENT_H_
+
 #include "Helper.h"
 
 namespace MiniNeuralNetwork
@@ -43,3 +46,5 @@ namespace MiniNeuralNetwork
         cublasHandle_t cublasHandle,
         cudaStream_t stream );
 }
+
+#endif

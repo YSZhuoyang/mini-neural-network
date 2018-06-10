@@ -1,4 +1,7 @@
 
+#ifndef _LAYER_H_
+#define _LAYER_H_
+
 #include "Helper.h"
 
 
@@ -13,3 +16,5 @@ namespace MiniNeuralNetwork
 
     void destroyLayer( const Layer& layer );
 }
+
+#endif
