@@ -49,7 +49,7 @@ void MiniNeuralNetwork::MiniNeuralNets::initialize(
         const unsigned int numFeaturesOut = (i == numConnections - 1)
             ? architecture[i + 1]
             : architecture[i + 1] - 1;
-        connections[i] = initializeConnection(numFeaturesIn, numFeaturesOut);
+        connections[i] = initializeConnection( numFeaturesIn, numFeaturesOut );
     }
 
     cudaErrorCheck( cudaEventCreateWithFlags(
@@ -88,7 +88,7 @@ void MiniNeuralNetwork::MiniNeuralNets::train(
             : (i == numLayers - 1)
                 ? OUTPUT_LAYER
                 : HIDDEN_LAYER;
-        layers[i] = initializeLayer(architecture[i], numInstances, layerType);
+        layers[i] = initializeLayer( architecture[i], numInstances, layerType );
     }
 
     /******** Init device training data ********/
