@@ -1,6 +1,7 @@
 
-#include "ArffImporter.h"
-#include "MiniNeuralNets.h"
+#include "ArffImporter.hpp"
+#include "Sigmoid.hpp"
+#include "GradientDescent.hpp"
 
 
 int main()
@@ -17,7 +18,7 @@ int main()
 
     // Specify architecture
     const unsigned int numClasses = trainSetImporter.GetNumClasses();
-    // Number of features in each layer including input layer
+    // Number of features in each layer, including bias input
     std::vector<unsigned int> architecture
     {
         trainSetImporter.GetNumFeatures() + 1,
@@ -27,16 +28,15 @@ int main()
 
     using namespace MiniNeuralNetwork;
 
-    MiniNeuralNets miniNeuralNets;
-    miniNeuralNets.initialize(
-        architecture,
-        cublasHandle );
+    MiniNeuralNets miniNeuralNets( architecture );
+    SigmidFunction sig;
+    Trainer trainer( &miniNeuralNets, &sig, cublasHandle );
 
     time_t start, end;
     double dif;
     time( &start );
 
-    miniNeuralNets.train(
+    trainer.train(
         trainSetImporter.GetFeatureMatTrans(),
         trainSetImporter.GetClassIndexMat(),
         trainSetImporter.GetNumInstances(),
@@ -49,7 +49,7 @@ int main()
     dif = difftime( end, start );
     printf( "Time taken: %.2lf seconds.\n", dif );
 
-    miniNeuralNets.test(
+    trainer.test(
         testSetImporter.GetFeatureMatTrans(),
         testSetImporter.GetClassIndexMat(),
         testSetImporter.GetNumInstances() );

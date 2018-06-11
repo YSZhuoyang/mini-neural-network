@@ -1,6 +1,11 @@
 
-#include "Helper.h"
+#include "Helper.hpp"
 
+
+bool MyHelper::IsLetter( const char c )
+{
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
 
 Instance MyHelper::Tokenize(
     const char* str,
@@ -49,11 +54,6 @@ Instance MyHelper::Tokenize(
     }
 
     return instance;
-}
-
-bool MyHelper::IsLetter( const char c )
-{
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
 bool MyHelper::StrEqualCaseSen( const char* str1, const char* str2 )
