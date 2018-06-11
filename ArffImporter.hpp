@@ -1,12 +1,11 @@
 
-#ifndef _ARFF_IMPORTER_H_
-#define _ARFF_IMPORTER_H_
+#ifndef _ARFF_IMPORTER_HPP_
+#define _ARFF_IMPORTER_HPP_
 
 
-#include "BasicDataStructures.h"
-#include "Helper.h"
-
-#include <string.h>
+#include "BasicDataStructures.hpp"
+#include "Helper.hpp"
+#include <string>
 
 
 using namespace BasicDataStructures;

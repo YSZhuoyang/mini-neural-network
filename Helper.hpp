@@ -1,8 +1,8 @@
 
-#ifndef _HELPER_H_
-#define _HELPER_H_
+#ifndef _HELPER_HPP_
+#define _HELPER_HPP_
 
-#include "BasicDataStructures.h"
+#include "BasicDataStructures.hpp"
 #include <stdio.h>
 #include <time.h>
 #include <algorithm>
@@ -16,11 +16,11 @@ namespace MyHelper
 {
 #define NUM_BLOCK_THREADS 128
 
+    bool IsLetter( const char c );
     bool StrEqualCaseSen( const char* str1, const char* str2 );
     bool StrEqualCaseInsen( const char* str1, const char* str2 );
     // Include string terminator
     unsigned int GetStrLength( const char* str );
-    bool IsLetter( const char c );
     Instance Tokenize(
         const char* str,
         const std::vector<NumericAttr>& featureVec );
