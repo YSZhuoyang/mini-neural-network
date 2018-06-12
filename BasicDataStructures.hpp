@@ -2,8 +2,8 @@
 #include <cuda_runtime.h>
 #include "cublas_v2.h"
 
-#ifndef _BASIC_DATA_STRUCTURES_HPP_
-#define _BASIC_DATA_STRUCTURES_HPP_
+#ifndef BASIC_DATA_STRUCTURES_HPP
+#define BASIC_DATA_STRUCTURES_HPP
 
 
 namespace BasicDataStructures

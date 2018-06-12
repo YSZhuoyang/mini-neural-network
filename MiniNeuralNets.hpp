@@ -1,6 +1,6 @@
 
-#ifndef _MINI_NEURAL_NETS_HPP_
-#define _MINI_NEURAL_NETS_HPP_
+#ifndef MINI_NEURAL_NETS_HPP
+#define MINI_NEURAL_NETS_HPP
 
 #include "Layer.hpp"
 #include "Connection.hpp"

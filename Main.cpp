@@ -29,7 +29,7 @@ int main()
     using namespace MiniNeuralNetwork;
 
     MiniNeuralNets miniNeuralNets( architecture );
-    SigmidFunction sig;
+    SigmoidFunction sig;
     Trainer trainer( &miniNeuralNets, &sig, cublasHandle );
 
     time_t start, end;

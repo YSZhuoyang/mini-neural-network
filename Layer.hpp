@@ -1,6 +1,6 @@
 
-#ifndef _LAYER_HPP_
-#define _LAYER_HPP_
+#ifndef LAYER_HPP
+#define LAYER_HPP
 
 #include "Helper.hpp"
 
