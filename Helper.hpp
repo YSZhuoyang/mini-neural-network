@@ -1,6 +1,6 @@
 
-#ifndef _HELPER_HPP_
-#define _HELPER_HPP_
+#ifndef HELPER_HPP
+#define HELPER_HPP
 
 #include "BasicDataStructures.hpp"
 #include <stdio.h>

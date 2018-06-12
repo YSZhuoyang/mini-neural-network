@@ -1,6 +1,6 @@
 
-#ifndef _ARFF_IMPORTER_HPP_
-#define _ARFF_IMPORTER_HPP_
+#ifndef ARFF_IMPORTER_HPP
+#define ARFF_IMPORTER_HPP
 
 
 #include "BasicDataStructures.hpp"

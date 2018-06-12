@@ -1,6 +1,6 @@
 
-#ifndef _SIGMOID_HPP_
-#define _SIGMOID_HPP_
+#ifndef SIGMOID_HPP
+#define SIGMOID_HPP
 
 #include "ActivationFunction.hpp"
 
@@ -76,7 +76,7 @@ namespace MiniNeuralNetwork
 {
     using namespace MyHelper;
 
-    struct SigmidFunction : public ActivationFunction
+    struct SigmoidFunction : public ActivationFunction
     {
         inline void forwardOutput(
             const Layer& sourceLayer,
