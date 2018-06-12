@@ -1,6 +1,6 @@
 
-#ifndef _CONNECTION_HPP_
-#define _CONNECTION_HPP_
+#ifndef CONNECTION_HPP
+#define CONNECTION_HPP
 
 #include "Helper.hpp"
 

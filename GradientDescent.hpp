@@ -1,6 +1,6 @@
 
-#ifndef _GRADIENT_DESCENT_HPP_
-#define _GRADIENT_DESCENT_HPP_
+#ifndef GRADIENT_DESCENT_HPP
+#define GRADIENT_DESCENT_HPP
 
 #include "ActivationFunction.hpp"
 #include "MiniNeuralNets.hpp"
