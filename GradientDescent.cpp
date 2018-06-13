@@ -1,14 +1,13 @@
 
 #include "GradientDescent.hpp"
 
+using namespace MiniNeuralNetwork;
 
-MiniNeuralNetwork::Trainer::Trainer(
-    MiniNeuralNets* neuralNets,
-    ActivationFunction* actFunction,
+Trainer::Trainer(
+    std::shared_ptr<MiniNeuralNets> neuralNets,
     cublasHandle_t cublasHandle )
 {
     this->neuralNets = neuralNets;
-    this->activationFunction = actFunction;
     this->cublasHandle = cublasHandle;
 
     cudaErrorCheck( cudaEventCreateWithFlags(
@@ -30,7 +29,7 @@ MiniNeuralNetwork::Trainer::Trainer(
             cudaEventDisableTiming ) );
 }
 
-MiniNeuralNetwork::Trainer::~Trainer()
+Trainer::~Trainer()
 {
     cudaErrorCheck( cudaEventDestroy( trainingComplete ) );
     cudaErrorCheck( cudaEventDestroy( testComplete ) );
@@ -41,7 +40,7 @@ MiniNeuralNetwork::Trainer::~Trainer()
     backPropCompletes = nullptr;
 }
 
-void MiniNeuralNetwork::Trainer::train(
+void Trainer::train(
     const float* trainingFeatureMat,
     const unsigned short* classIndexMat,
     const unsigned int numInstances,
@@ -52,7 +51,6 @@ void MiniNeuralNetwork::Trainer::train(
 {
     const unsigned short numLayers = neuralNets->numLayers;
     const unsigned short numConnections = neuralNets->numConnections;
-    const unsigned int* architecture = neuralNets->architecture;
 
     /******** Init device training data ********/
 
@@ -113,7 +111,7 @@ void MiniNeuralNetwork::Trainer::train(
     cudaErrorCheck( cudaMalloc(
         (void**) &dCostMat,
         classIndexMatSize * sizeof( float ) ) );
-    float costSum = activationFunction->computeCost(
+    float costSum = neuralNets->activationFunction->computeCost(
         dCostMat,
         dClassIndexMat,
         layers[numLayers - 1],
@@ -133,7 +131,7 @@ void MiniNeuralNetwork::Trainer::train(
     dCostMat = nullptr;
 }
 
-void MiniNeuralNetwork::Trainer::test(
+void Trainer::test(
     const float* testFeatureMat,
     const unsigned short* classIndexMat,
     const unsigned int numInstances )
@@ -221,7 +219,7 @@ void MiniNeuralNetwork::Trainer::test(
     dClassIndexMat = nullptr;
 }
 
-inline void MiniNeuralNetwork::Trainer::forwardProp(
+inline void Trainer::forwardProp(
     Layer* layers,
     const unsigned int numInstances,
     cudaStream_t stream1 )
@@ -232,7 +230,7 @@ inline void MiniNeuralNetwork::Trainer::forwardProp(
     for (unsigned short i = 0; i < numConnections; i++)
     {
         printf( "layer %d to layer %d: Forward output ...\n", i, i + 1 );
-        activationFunction->forwardOutput(
+        neuralNets->activationFunction->forwardOutput(
             layers[i],
             layers[i + 1],
             connections[i],
@@ -242,7 +240,7 @@ inline void MiniNeuralNetwork::Trainer::forwardProp(
     }
 }
 
-inline void MiniNeuralNetwork::Trainer::backwardProp(
+inline void Trainer::backwardProp(
     Layer* layers,
     const unsigned short* dClassIndexMat,
     const unsigned int numInstances,
@@ -254,8 +252,12 @@ inline void MiniNeuralNetwork::Trainer::backwardProp(
     const unsigned short numLayers = neuralNets->numLayers;
     const unsigned short numHiddenLayers = neuralNets->numHiddenLayers;
     Connection* connections = neuralNets->connections;
+    std::shared_ptr<ActivationFunction> activationFunction = neuralNets->activationFunction;
 
-    activationFunction->computeOutputLayerError(dClassIndexMat, layers[numLayers - 1], stream1);
+    activationFunction->computeOutputLayerError(
+        dClassIndexMat,
+        layers[numLayers - 1],
+        stream1 );
     cudaErrorCheck( cudaEventRecord( forwardPropComplete, stream1 ) );
     cudaErrorCheck( cudaStreamWaitEvent( stream2, forwardPropComplete, 0 ) );
 

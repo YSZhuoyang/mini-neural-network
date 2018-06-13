@@ -4,10 +4,12 @@
 using namespace MiniNeuralNetwork;
 
 MiniNeuralNets::MiniNeuralNets(
-    const std::vector<unsigned int>& architecture )
+    const std::vector<unsigned int>& architecture,
+    std::shared_ptr<ActivationFunction> actFunction )
 {
-    this->architecture = (unsigned int*) malloc( architecture.size() * sizeof( unsigned int ) );
-    std::copy( architecture.begin(), architecture.end(), this->architecture );
+    activationFunction = actFunction;
+    this->architecture = std::make_unique<unsigned int[]>(architecture.size());
+    std::copy( architecture.begin(), architecture.end(), this->architecture.get() );
 
     numLayers = architecture.size();
     numHiddenLayers = numLayers - 2;
@@ -17,9 +19,6 @@ MiniNeuralNets::MiniNeuralNets(
 MiniNeuralNets::~MiniNeuralNets()
 {
     destroyConnections();
-
-    free( architecture );
-    architecture = nullptr;
 }
 
 Layer* MiniNeuralNets::initializeLayers( const unsigned int numInstances )

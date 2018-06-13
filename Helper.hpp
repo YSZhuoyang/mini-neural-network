@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <algorithm>
+#include <memory>
 #include <vector>
 #include <random>
 
