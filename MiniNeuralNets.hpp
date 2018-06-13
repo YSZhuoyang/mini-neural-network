@@ -2,14 +2,15 @@
 #ifndef MINI_NEURAL_NETS_HPP
 #define MINI_NEURAL_NETS_HPP
 
-#include "Layer.hpp"
-#include "Connection.hpp"
+#include "ActivationFunction.hpp"
 
 namespace MiniNeuralNetwork
 {
     struct MiniNeuralNets
     {
-        MiniNeuralNets( const std::vector<unsigned int>& architecture );
+        MiniNeuralNets(
+            const std::vector<unsigned int>& architecture,
+            std::shared_ptr<ActivationFunction> actFunction );
         ~MiniNeuralNets();
 
         Layer* initializeLayers( const unsigned int numInstances );
@@ -17,11 +18,12 @@ namespace MiniNeuralNetwork
         void initializeConnections();
         void destroyConnections();
 
-        unsigned int* architecture       = nullptr;
-        Connection* connections          = nullptr;
-        unsigned short numLayers         = 0;
-        unsigned short numHiddenLayers   = 0;
-        unsigned short numConnections    = 0;
+        std::unique_ptr<unsigned int[]> architecture           = nullptr;
+        Connection* connections                                = nullptr;
+        std::shared_ptr<ActivationFunction> activationFunction = nullptr;
+        unsigned short numLayers                               = 0;
+        unsigned short numHiddenLayers                         = 0;
+        unsigned short numConnections                          = 0;
     };
 }
 
