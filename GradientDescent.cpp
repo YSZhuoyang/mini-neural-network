@@ -4,7 +4,7 @@
 using namespace MiniNeuralNetwork;
 
 Trainer::Trainer(
-    MiniNeuralNets* neuralNets,
+    std::shared_ptr<MiniNeuralNets> neuralNets,
     cublasHandle_t cublasHandle )
 {
     this->neuralNets = neuralNets;
@@ -51,7 +51,6 @@ void Trainer::train(
 {
     const unsigned short numLayers = neuralNets->numLayers;
     const unsigned short numConnections = neuralNets->numConnections;
-    const unsigned int* architecture = neuralNets->architecture;
 
     /******** Init device training data ********/
 
@@ -253,7 +252,7 @@ inline void Trainer::backwardProp(
     const unsigned short numLayers = neuralNets->numLayers;
     const unsigned short numHiddenLayers = neuralNets->numHiddenLayers;
     Connection* connections = neuralNets->connections;
-    ActivationFunction* activationFunction = neuralNets->activationFunction;
+    std::shared_ptr<ActivationFunction> activationFunction = neuralNets->activationFunction;
 
     activationFunction->computeOutputLayerError(
         dClassIndexMat,

@@ -12,7 +12,7 @@ namespace MiniNeuralNetwork
     {
         public:
             Trainer(
-                MiniNeuralNets* neuralNets,
+                std::shared_ptr<MiniNeuralNets> neuralNets,
                 cublasHandle_t cublasHandle );
             ~Trainer();
 
@@ -44,8 +44,8 @@ namespace MiniNeuralNetwork
                 cudaStream_t stream2 );
 
 
-            MiniNeuralNets* neuralNets     = nullptr;
-            cudaEvent_t* backPropCompletes = nullptr;
+            std::shared_ptr<MiniNeuralNets> neuralNets = nullptr;
+            cudaEvent_t* backPropCompletes             = nullptr;
             cudaEvent_t forwardPropComplete;
             cudaEvent_t trainingComplete;
             cudaEvent_t testComplete;

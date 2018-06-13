@@ -28,9 +28,10 @@ int main()
 
     using namespace MiniNeuralNetwork;
 
-    SigmoidFunction sig;
-    MiniNeuralNets miniNeuralNets( architecture, &sig );
-    Trainer trainer( &miniNeuralNets, cublasHandle );
+    std::shared_ptr<ActivationFunction> sig = std::make_shared<SigmoidFunction>();
+    std::shared_ptr<MiniNeuralNets> miniNeuralNets =
+        std::make_shared<MiniNeuralNets>( architecture, sig );
+    Trainer trainer( miniNeuralNets, cublasHandle );
 
     time_t start, end;
     double dif;

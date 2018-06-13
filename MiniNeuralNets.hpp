@@ -10,7 +10,7 @@ namespace MiniNeuralNetwork
     {
         MiniNeuralNets(
             const std::vector<unsigned int>& architecture,
-            ActivationFunction* actFunction );
+            std::shared_ptr<ActivationFunction> actFunction );
         ~MiniNeuralNets();
 
         Layer* initializeLayers( const unsigned int numInstances );
@@ -18,12 +18,12 @@ namespace MiniNeuralNetwork
         void initializeConnections();
         void destroyConnections();
 
-        unsigned int* architecture             = nullptr;
-        Connection* connections                = nullptr;
-        ActivationFunction* activationFunction = nullptr;
-        unsigned short numLayers               = 0;
-        unsigned short numHiddenLayers         = 0;
-        unsigned short numConnections          = 0;
+        std::unique_ptr<unsigned int[]> architecture           = nullptr;
+        Connection* connections                                = nullptr;
+        std::shared_ptr<ActivationFunction> activationFunction = nullptr;
+        unsigned short numLayers                               = 0;
+        unsigned short numHiddenLayers                         = 0;
+        unsigned short numConnections                          = 0;
     };
 }
 
