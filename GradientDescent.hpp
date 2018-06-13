@@ -2,7 +2,6 @@
 #ifndef GRADIENT_DESCENT_HPP
 #define GRADIENT_DESCENT_HPP
 
-#include "ActivationFunction.hpp"
 #include "MiniNeuralNets.hpp"
 
 namespace MiniNeuralNetwork
@@ -14,7 +13,6 @@ namespace MiniNeuralNetwork
         public:
             Trainer(
                 MiniNeuralNets* neuralNets,
-                ActivationFunction* actFunction,
                 cublasHandle_t cublasHandle );
             ~Trainer();
 
@@ -36,7 +34,6 @@ namespace MiniNeuralNetwork
                 Layer* layers,
                 const unsigned int numInstances,
                 cudaStream_t stream1 );
-
             inline void backwardProp(
                 Layer* layers,
                 const unsigned short* dClassIndexMat,
@@ -47,10 +44,8 @@ namespace MiniNeuralNetwork
                 cudaStream_t stream2 );
 
 
-            MiniNeuralNets* neuralNets;
-            ActivationFunction* activationFunction;
-
-            cudaEvent_t* backPropCompletes   = nullptr;
+            MiniNeuralNets* neuralNets     = nullptr;
+            cudaEvent_t* backPropCompletes = nullptr;
             cudaEvent_t forwardPropComplete;
             cudaEvent_t trainingComplete;
             cudaEvent_t testComplete;

@@ -28,9 +28,9 @@ int main()
 
     using namespace MiniNeuralNetwork;
 
-    MiniNeuralNets miniNeuralNets( architecture );
     SigmoidFunction sig;
-    Trainer trainer( &miniNeuralNets, &sig, cublasHandle );
+    MiniNeuralNets miniNeuralNets( architecture, &sig );
+    Trainer trainer( &miniNeuralNets, cublasHandle );
 
     time_t start, end;
     double dif;

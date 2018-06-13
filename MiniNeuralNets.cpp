@@ -4,8 +4,10 @@
 using namespace MiniNeuralNetwork;
 
 MiniNeuralNets::MiniNeuralNets(
-    const std::vector<unsigned int>& architecture )
+    const std::vector<unsigned int>& architecture,
+    ActivationFunction* actFunction )
 {
+    activationFunction = actFunction;
     this->architecture = (unsigned int*) malloc( architecture.size() * sizeof( unsigned int ) );
     std::copy( architecture.begin(), architecture.end(), this->architecture );
 
