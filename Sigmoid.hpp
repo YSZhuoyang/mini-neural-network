@@ -5,7 +5,7 @@
 #include "ActivationFunction.hpp"
 
 
-__global__ void Sigmid(
+__global__ void Sigmoid(
     float* __restrict__ dOutputMat,
     const unsigned int subMatSize )
 {
@@ -16,7 +16,7 @@ __global__ void Sigmid(
     dOutputMat[eleId] = 1.0f / (1.0f + expf(-output));
 }
 
-__global__ void BackPropError(
+__global__ void DSigmoid(
     float* __restrict__ dErrorMat,
     const float* __restrict__ dOutputMat,
     const unsigned int errorMatSize )
@@ -104,7 +104,7 @@ namespace MiniNeuralNetwork
                 &beta,
                 targetLayer.dOutputMat,
                 numInstances ) );
-            Sigmid<<<
+            Sigmoid<<<
                 targetLayer.sigKernalConfig.gridDim,
                 targetLayer.sigKernalConfig.blockDim,
                 0,
@@ -142,7 +142,7 @@ namespace MiniNeuralNetwork
                 &beta,
                 targetLayer.dErrorMat,
                 numInstances ) );
-            BackPropError<<<
+            DSigmoid<<<
                 targetLayer.sigKernalConfig.gridDim,
                 targetLayer.sigKernalConfig.blockDim,
                 0,
