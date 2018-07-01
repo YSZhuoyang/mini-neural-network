@@ -8,8 +8,8 @@ NVCCCFLAGS = -arch=sm_50 -std=c++14 -O3 -use_fast_math -lcublas
 # Enable host code debug in vscode
 NVCCCFLAGS_DEBUG = -arch=sm_50 -std=c++14 -g -G -use_fast_math -lcublas
 CUFLAGS = -x cu
-OBJECTS = Helper.o ArffImporter.o GradientDescent.o MiniNeuralNets.o Main.o
-OBJECTS_DEBUG = Helper_debug.o ArffImporter_debug.o GradientDescent_debug.o MiniNeuralNets_debug.o Main_debug.o
+OBJECTS = Helper.o ArffImporter.o ActivationFunction.o MiniNeuralNets.o GradientDescent.o Main.o
+OBJECTS_DEBUG = Helper_debug.o ArffImporter_debug.o ActivationFunction_debug.o MiniNeuralNets_debug.o GradientDescent_debug.o Main_debug.o
 
 ############################# Compile exec ##############################
 
@@ -24,7 +24,10 @@ Helper.o: Helper.cpp Helper.hpp BasicDataStructures.hpp
 ArffImporter.o: ArffImporter.cpp ArffImporter.hpp Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c ArffImporter.cpp
 
-MiniNeuralNets.o: MiniNeuralNets.cpp MiniNeuralNets.hpp ActivationFunction.hpp Layer.hpp Connection.hpp Helper.o
+ActivationFunction.o: ActivationFunction.cpp ActivationFunction.hpp
+	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c ActivationFunction.cpp
+
+MiniNeuralNets.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction.o Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c MiniNeuralNets.cpp
 
 GradientDescent.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets.o
@@ -46,7 +49,10 @@ Helper_debug.o: Helper.cpp Helper.hpp BasicDataStructures.hpp
 ArffImporter_debug.o: ArffImporter.cpp ArffImporter.hpp Helper_debug.o
 	$(NVCC) ${NVCCCFLAGS_DEBUG} -c ArffImporter.cpp -o ArffImporter_debug.o
 
-MiniNeuralNets_debug.o: MiniNeuralNets.cpp MiniNeuralNets.hpp ActivationFunction.hpp Layer.hpp Connection.hpp Helper_debug.o
+ActivationFunction_debug.o: ActivationFunction.cpp ActivationFunction.hpp
+	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c ActivationFunction.cpp -o ActivationFunction_debug.o
+
+MiniNeuralNets_debug.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction_debug.o Helper_debug.o
 	$(NVCC) ${NVCCCFLAGS_DEBUG} -c MiniNeuralNets.cpp -o MiniNeuralNets_debug.o
 
 GradientDescent_debug.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets_debug.o

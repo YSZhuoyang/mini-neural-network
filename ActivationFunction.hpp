@@ -25,12 +25,12 @@ namespace MiniNeuralNetwork
             cublasHandle_t cublasHandle,
             cudaStream_t stream ) = 0;
 
-        virtual void computeOutputLayerError(
+        void computeOutputLayerError(
             const unsigned short* dClassIndexMat,
             const Layer& outputLayer,
-            cudaStream_t stream ) = 0;
+            cudaStream_t stream );
 
-        virtual void updateWeights(
+        void updateWeights(
             const Layer& sourceLayer,
             const Layer& targetLayer,
             const Connection& connection,
@@ -38,14 +38,14 @@ namespace MiniNeuralNetwork
             const float learningParam,
             const float regularParam,
             cublasHandle_t cublasHandle,
-            cudaStream_t stream ) = 0;
+            cudaStream_t stream );
 
-        virtual float computeCost(
+        float computeCost(
             float* dCostMat,
             const unsigned short* dClassIndexMat,
             const Layer& outputLayer,
             cublasHandle_t cublasHandle,
-            cudaStream_t stream ) = 0;
+            cudaStream_t stream );
     };
 }
 
