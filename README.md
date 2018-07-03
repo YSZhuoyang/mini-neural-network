@@ -4,7 +4,13 @@
 A general perception neural network written in CUDA.
 
 ## Gradient Descent training algorithm
+
 This Gradient Descent algorithm was implemented based on equations from [Machine Learning on Coursera](https://www.coursera.org/learn/machine-learning).
+
+### Supported activation function
+
+* Sigmoid.
+* Hyper Tangent.
 
 ### Gragh representation
 
@@ -74,7 +80,8 @@ Activate each node with a Sigmoid(Logistic) activation function from left to rig
     w[a, b]: weight associated with the connection between node a at layer l and node b at layer l + 1.
     
     z1(x) = w[0, l] * X0 + w[1, l] * x1 + w[2, l] * x2 + ... + w[n, l] * xn
-    output[l + 1] = g(z1) = 1 / (1 + pow(e, -z1))
+    Sigmoid output: output[l + 1] = g(z1) = 1 / (1 + pow(e, -z1))
+    Hyper Tangent output: output[l + 1] = g(z1) = (pow(e, z1) - pow(e, -z1)) / (pow(e, z1) + pow(e, -z1))
 
 #### Backward propagation
   1. Compute error in the output layer:
