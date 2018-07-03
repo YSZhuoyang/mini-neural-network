@@ -1,6 +1,6 @@
 
 #include "ArffImporter.hpp"
-#include "HyperTangent.hpp"
+#include "Sigmoid.hpp"
 #include "GradientDescent.hpp"
 
 
@@ -28,7 +28,7 @@ int main()
 
     using namespace MiniNeuralNetwork;
 
-    std::shared_ptr<ActivationFunction> sig = std::make_shared<HyperTangentFunction>();
+    std::shared_ptr<ActivationFunction> sig = std::make_shared<SigmoidFunction>();
     std::shared_ptr<MiniNeuralNets> miniNeuralNets =
         std::make_shared<MiniNeuralNets>( architecture, sig );
     Trainer trainer( miniNeuralNets, cublasHandle );

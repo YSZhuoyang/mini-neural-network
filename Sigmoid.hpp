@@ -12,6 +12,8 @@ namespace MiniNeuralNetwork
 
     struct SigmoidFunction : public ActivationFunction
     {
+        unsigned short standardizeOutputLabel( float output ) final;
+
         void forwardOutput(
             const Layer& sourceLayer,
             const Layer& targetLayer,

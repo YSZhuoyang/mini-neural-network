@@ -10,6 +10,9 @@ namespace MiniNeuralNetwork
 {
     struct ActivationFunction
     {
+        // Map output domain to range [0, 1]
+        virtual unsigned short standardizeOutputLabel( float output ) = 0;
+
         virtual void forwardOutput(
             const Layer& sourceLayer,
             const Layer& targetLayer,

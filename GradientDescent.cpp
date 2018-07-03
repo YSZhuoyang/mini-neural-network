@@ -189,7 +189,8 @@ void Trainer::test(
     {
         bool correct;
         if (numOutputFeas == 1)
-            correct = classIndexMat[i] == (unsigned short) std::lroundf( outputMat[i] / 2.0f + 0.5f );
+            correct = classIndexMat[i] ==
+                neuralNets->activationFunction->standardizeOutputLabel( outputMat[i] );
         else
         {
             float max = outputMat[i];

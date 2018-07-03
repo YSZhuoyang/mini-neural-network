@@ -56,6 +56,11 @@ __global__ void ComputeHyperTangentCost(
 
 using namespace MiniNeuralNetwork;
 
+unsigned short HyperTangentFunction::standardizeOutputLabel( float output )
+{
+    return (unsigned short) std::lroundf( output / 2.0f + 0.5f );
+}
+
 void HyperTangentFunction::forwardOutput(
     const Layer& sourceLayer,
     const Layer& targetLayer,
