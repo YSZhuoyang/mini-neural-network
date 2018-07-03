@@ -5,10 +5,14 @@
 #include "Layer.hpp"
 #include "Connection.hpp"
 
+
 namespace MiniNeuralNetwork
 {
     struct ActivationFunction
     {
+        // Map output domain to range [0, 1]
+        virtual unsigned short standardizeOutputLabel( float output ) = 0;
+
         virtual void forwardOutput(
             const Layer& sourceLayer,
             const Layer& targetLayer,
@@ -30,7 +34,14 @@ namespace MiniNeuralNetwork
             const Layer& outputLayer,
             cudaStream_t stream ) = 0;
 
-        virtual void updateWeights(
+        virtual float computeCost(
+            float* dCostMat,
+            const unsigned short* dClassIndexMat,
+            const Layer& outputLayer,
+            cublasHandle_t cublasHandle,
+            cudaStream_t stream ) = 0;
+
+        void updateWeights(
             const Layer& sourceLayer,
             const Layer& targetLayer,
             const Connection& connection,
@@ -38,14 +49,7 @@ namespace MiniNeuralNetwork
             const float learningParam,
             const float regularParam,
             cublasHandle_t cublasHandle,
-            cudaStream_t stream ) = 0;
-
-        virtual float computeCost(
-            float* dCostMat,
-            const unsigned short* dClassIndexMat,
-            const Layer& outputLayer,
-            cublasHandle_t cublasHandle,
-            cudaStream_t stream ) = 0;
+            cudaStream_t stream );
     };
 }
 

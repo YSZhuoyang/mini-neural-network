@@ -1,16 +1,15 @@
 
-#ifndef SIGMOID_HPP
-#define SIGMOID_HPP
+#ifndef HYPER_TANGENT_HPP
+#define HYPER_TANGENT_HPP
 
 #include "ActivationFunction.hpp"
-
 
 
 namespace MiniNeuralNetwork
 {
     using namespace MyHelper;
 
-    struct SigmoidFunction : public ActivationFunction
+    struct HyperTangentFunction : public ActivationFunction
     {
         unsigned short standardizeOutputLabel( float output ) final;
 
