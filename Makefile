@@ -39,7 +39,7 @@ MiniNeuralNets.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp
 GradientDescent.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets.o
 	$(NVCC) ${NVCCCFLAGS} -c GradientDescent.cpp
 
-Main.o: Main.cpp GradientDescent.o MiniNeuralNets.o Sigmoid.o
+Main.o: Main.cpp GradientDescent.o MiniNeuralNets.o Sigmoid.o HyperTangent.o
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Main.cpp
 
 ###################### Compile with debug enabled #######################
@@ -70,7 +70,7 @@ MiniNeuralNets_debug.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connecti
 GradientDescent_debug.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets_debug.o
 	$(NVCC) ${NVCCCFLAGS_DEBUG} -c GradientDescent.cpp -o GradientDescent_debug.o
 
-Main_debug.o: Main.cpp GradientDescent_debug.o MiniNeuralNets_debug.o HyperTangent_debug.o
+Main_debug.o: Main.cpp GradientDescent_debug.o MiniNeuralNets_debug.o Sigmoid_debug.o HyperTangent_debug.o
 	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c Main.cpp -o Main_debug.o
 
 ################################# Clean #################################
