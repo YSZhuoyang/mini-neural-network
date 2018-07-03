@@ -5,6 +5,7 @@
 #include "Layer.hpp"
 #include "Connection.hpp"
 
+
 namespace MiniNeuralNetwork
 {
     struct ActivationFunction
@@ -25,10 +26,17 @@ namespace MiniNeuralNetwork
             cublasHandle_t cublasHandle,
             cudaStream_t stream ) = 0;
 
-        void computeOutputLayerError(
+        virtual void computeOutputLayerError(
             const unsigned short* dClassIndexMat,
             const Layer& outputLayer,
-            cudaStream_t stream );
+            cudaStream_t stream ) = 0;
+
+        virtual float computeCost(
+            float* dCostMat,
+            const unsigned short* dClassIndexMat,
+            const Layer& outputLayer,
+            cublasHandle_t cublasHandle,
+            cudaStream_t stream ) = 0;
 
         void updateWeights(
             const Layer& sourceLayer,
@@ -37,13 +45,6 @@ namespace MiniNeuralNetwork
             const unsigned int numInstances,
             const float learningParam,
             const float regularParam,
-            cublasHandle_t cublasHandle,
-            cudaStream_t stream );
-
-        float computeCost(
-            float* dCostMat,
-            const unsigned short* dClassIndexMat,
-            const Layer& outputLayer,
             cublasHandle_t cublasHandle,
             cudaStream_t stream );
     };

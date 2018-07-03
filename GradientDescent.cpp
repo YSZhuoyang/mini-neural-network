@@ -189,7 +189,7 @@ void Trainer::test(
     {
         bool correct;
         if (numOutputFeas == 1)
-            correct = classIndexMat[i] == (unsigned short) std::lroundf( outputMat[i] );
+            correct = classIndexMat[i] == (unsigned short) std::lroundf( outputMat[i] / 2.0f + 0.5f );
         else
         {
             float max = outputMat[i];
