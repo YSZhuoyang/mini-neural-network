@@ -75,23 +75,26 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
                     w[j1[l], j2[l + 1]] = w[j1[l], j2[l + 1]] + lr * (dw[j1[l], j2[l + 1]] + r * w[j1[l], j2[l + 1]]) / M
 
 #### Forward propagation
-Activate each node with a Sigmoid(Logistic) activation function from left to right:
+Activate each layer with an activation function (Sigmoid / Hyper Tangent) from left to right:
 
     w[a, b]: weight associated with the connection between node a at layer l and node b at layer l + 1.
     
     z1(x) = w[0, l] * X0 + w[1, l] * x1 + w[2, l] * x2 + ... + w[n, l] * xn
+    
     Sigmoid output: output[l + 1] = g(z1) = 1 / (1 + pow(e, -z1))
     Hyper Tangent output: output[l + 1] = g(z1) = (pow(e, z1) - pow(e, -z1)) / (pow(e, z1) + pow(e, -z1))
 
 #### Backward propagation
-  1. Compute error in the output layer:
+  1. Compute error (derivative of cost function with respect to z) in the output layer:
 
     e = h(x) - y
-    
+
   2. Backward propagate error in each layer from right to left:
 
     e[a, b]: error associated with node a at layer b.
     w[a, b]: weight associated with the connection between node a at layer l and node b at layer l + 1.
     
     z2(x) = w[l, 1] * e[1, l + 1] + w[l, 2] * e[2, l + 1] + ... + w[l, n] * e[n, l + 1]
-    e[l] = z2 * output[l] * (1 - output[l])
+    
+    Sigmoid error: e[l] = z2 * output[l] * (1 - output[l])
+    Hyper Tangent error: e[l] = z2 * (1 - output[l] * output[l])
