@@ -98,3 +98,8 @@ Activate each layer with an activation function (Sigmoid / Hyper Tangent) from l
     
     Sigmoid error: e[l] = z2 * output[l] * (1 - output[l])
     Hyper Tangent error: e[l] = z2 * (1 - output[l] * output[l])
+
+  3. Update weights:
+
+    dw[l] = e[l] x output[l] / M
+    w = w - dw * lr
