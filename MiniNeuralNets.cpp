@@ -1,19 +1,32 @@
 
 #include "MiniNeuralNets.hpp"
 
+
 using namespace MiniNeuralNetwork;
 
 MiniNeuralNets::MiniNeuralNets(
     const std::vector<unsigned int>& architecture,
-    std::shared_ptr<ActivationFunction> actFunction )
+    const std::vector<std::shared_ptr<ActivationFunction>>& activationFunctions )
 {
-    activationFunction = actFunction;
-    this->architecture = std::make_unique<unsigned int[]>(architecture.size());
-    std::copy( architecture.begin(), architecture.end(), this->architecture.get() );
-
+    numConnections = activationFunctions.size();
     numLayers = architecture.size();
     numHiddenLayers = numLayers - 2;
-    numConnections = numLayers - 1;
+
+    if (numConnections != numLayers - 1)
+        throw("Number of connections does not equal to the number of activation functions");
+
+    this->architecture = std::make_unique<unsigned int[]>( numLayers );
+    std::copy(
+        architecture.begin(),
+        architecture.end(),
+        this->architecture.get() );
+
+    this->activationFunctions =
+        std::make_unique<std::shared_ptr<ActivationFunction>[]>( numConnections );
+    std::copy(
+        activationFunctions.begin(),
+        activationFunctions.end(),
+        this->activationFunctions.get() );
 }
 
 MiniNeuralNets::~MiniNeuralNets()
@@ -58,7 +71,9 @@ void MiniNeuralNets::initializeConnections()
         const unsigned int numFeaturesOut = (i == numConnections - 1)
             ? architecture[i + 1]
             : architecture[i + 1] - 1;
-        connections[i] = Connection::initializeConnection( numFeaturesIn, numFeaturesOut );
+        connections[i] = Connection::initializeConnection(
+            numFeaturesIn,
+            numFeaturesOut );
     }
 }
 

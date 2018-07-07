@@ -1,6 +1,7 @@
 
 #include "ArffImporter.hpp"
 #include "Sigmoid.hpp"
+#include "HyperTangent.hpp"
 #include "GradientDescent.hpp"
 
 
@@ -16,6 +17,8 @@ int main()
     cublasHandle_t cublasHandle;
     cublasErrorCheck( cublasCreate( &cublasHandle ) );
 
+    using namespace MiniNeuralNetwork;
+
     // Specify architecture
     const unsigned int numClasses = trainSetImporter.GetNumClasses();
     // Number of features in each layer, including bias input
@@ -25,12 +28,17 @@ int main()
         7,
         (numClasses == 2) ? 1 : numClasses
     };
-
-    using namespace MiniNeuralNetwork;
-
+    // Determine activation function between layers
     std::shared_ptr<ActivationFunction> sig = std::make_shared<SigmoidFunction>();
+    std::shared_ptr<ActivationFunction> hTan = std::make_shared<HyperTangentFunction>();
+    std::vector<std::shared_ptr<ActivationFunction>> activationFunctions
+    {
+        hTan,
+        sig
+    };
+
     std::shared_ptr<MiniNeuralNets> miniNeuralNets =
-        std::make_shared<MiniNeuralNets>( architecture, sig );
+        std::make_shared<MiniNeuralNets>( architecture, activationFunctions );
     Trainer trainer( miniNeuralNets, cublasHandle );
 
     time_t start, end;

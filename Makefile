@@ -6,7 +6,7 @@ SHELL = /bin/sh
 NVCC = nvcc
 NVCCCFLAGS = -arch=sm_50 -std=c++14 -O3 -use_fast_math -lcublas
 CUFLAGS = -x cu
-OBJECTS = Helper.o ArffImporter.o ActivationFunction.o Sigmoid.o HyperTangent.o MiniNeuralNets.o GradientDescent.o Main.o
+OBJECTS = Helper.o ArffImporter.o Sigmoid.o HyperTangent.o MiniNeuralNets.o GradientDescent.o Main.o
 
 ################################ Compile ################################
 
@@ -21,20 +21,17 @@ Helper.o: Helper.cpp Helper.hpp BasicDataStructures.hpp
 ArffImporter.o: ArffImporter.cpp ArffImporter.hpp Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c ArffImporter.cpp
 
-ActivationFunction.o: ActivationFunction.cpp ActivationFunction.hpp
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c ActivationFunction.cpp
-
-Sigmoid.o: Sigmoid.cpp Sigmoid.hpp ActivationFunction.o
+Sigmoid.o: Sigmoid.cpp Sigmoid.hpp ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Sigmoid.cpp
 
-HyperTangent.o: HyperTangent.cpp HyperTangent.hpp ActivationFunction.o
+HyperTangent.o: HyperTangent.cpp HyperTangent.hpp ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c HyperTangent.cpp
 
-MiniNeuralNets.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction.o Helper.o
+MiniNeuralNets.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction.hpp Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c MiniNeuralNets.cpp
 
 GradientDescent.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets.o
-	$(NVCC) ${NVCCCFLAGS} -c GradientDescent.cpp
+	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c GradientDescent.cpp
 
 Main.o: Main.cpp GradientDescent.o MiniNeuralNets.o Sigmoid.o HyperTangent.o
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Main.cpp
