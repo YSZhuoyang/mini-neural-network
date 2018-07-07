@@ -59,10 +59,10 @@ ActivationFunction_debug.o: ActivationFunction.cpp ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c ActivationFunction.cpp -o ActivationFunction_debug.o
 
 Sigmoid_debug.o: Sigmoid.cpp Sigmoid.hpp ActivationFunction_debug.o
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Sigmoid.cpp -o Sigmoid_debug.o
+	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c Sigmoid.cpp -o Sigmoid_debug.o
 
 HyperTangent_debug.o: HyperTangent.cpp HyperTangent.hpp ActivationFunction_debug.o
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c HyperTangent.cpp -o HyperTangent_debug.o
+	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c HyperTangent.cpp -o HyperTangent_debug.o
 
 MiniNeuralNets_debug.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction_debug.o Helper_debug.o
 	$(NVCC) ${NVCCCFLAGS_DEBUG} -c MiniNeuralNets.cpp -o MiniNeuralNets_debug.o
