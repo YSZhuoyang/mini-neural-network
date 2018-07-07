@@ -1,6 +1,25 @@
 
 #include "GradientDescent.hpp"
 
+
+__global__ void UpdateWeightMat(
+    float* __restrict__ dWeightMat,
+    const float* __restrict__ dDeltaWeightMat,
+    const float learningParam,
+    const float regularParam,
+    const unsigned int numFeaturesIn,
+    const unsigned int weightMatSize )
+{
+    const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
+    if (eleId >= weightMatSize) return;
+
+    // Add regularization term excluding bias term
+    float regularTerm = ((eleId + 1) % numFeaturesIn == 0) ?
+        0.0f : regularParam * dWeightMat[eleId];
+    dWeightMat[eleId] += learningParam * (dDeltaWeightMat[eleId] + regularTerm);
+}
+
+
 using namespace MiniNeuralNetwork;
 
 Trainer::Trainer(
@@ -235,11 +254,14 @@ inline void Trainer::forwardProp(
     for (unsigned short i = 0; i < numConnections; i++)
     {
         printf( "layer %d to layer %d: Forward output ...\n", i, i + 1 );
-        neuralNets->activationFunctions[i]->forwardOutput(
+        // Compute Z(n): W x A(n - 1)
+        // Compute A(n): g(Z(n))
+        forwardOutput(
             layers[i],
             layers[i + 1],
             connections[i],
             numInstances,
+            neuralNets->activationFunctions[i],
             cublasHandle,
             stream1 );
     }
@@ -258,6 +280,7 @@ inline void Trainer::backwardProp(
     const unsigned short numHiddenLayers = neuralNets->numHiddenLayers;
     Connection* connections = neuralNets->connections;
 
+    // Compute dZ(n): A(n) - Y
     neuralNets->activationFunctions[numHiddenLayers]->computeOutputLayerError(
         dClassIndexMat,
         layers[numLayers - 1],
@@ -269,11 +292,13 @@ inline void Trainer::backwardProp(
     {
         printf( "layer %d to layer %d: Backprop error ...\n", i + 1, i );
         cublasErrorCheck( cublasSetStream( cublasHandle, stream2 ) );
-        neuralNets->activationFunctions[i]->backPropError(
+        // Compute dZ(n - 1): WT x dZ(n) * g'(z(n))
+        backPropError(
             layers[i + 1],
             layers[i],
             connections[i],
             numInstances,
+            neuralNets->activationFunctions[i - 1],
             cublasHandle,
             stream2 );
         cudaErrorCheck( cudaEventRecord( backPropCompletes[i - 1], stream2 ) );
@@ -281,7 +306,9 @@ inline void Trainer::backwardProp(
         printf( "layer %d to layer %d: Update weights ...\n", i + 1, i );
         cudaErrorCheck( cudaStreamWaitEvent( stream1, backPropCompletes[i - 1], 0 ) );
         cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
-        neuralNets->activationFunctions[i]->updateWeights(
+        // Compute dW(n): dZ(n) x A(n - 1)
+        // update W(n): W(n) - lr * dW(n)
+        updateWeights(
             layers[i + 1],
             layers[i],
             connections[i],
@@ -292,8 +319,10 @@ inline void Trainer::backwardProp(
             stream1 );
     }
 
+    // Compute dW(1): dZ(1) x X
+    // update W(1): W(1) - lr * dW(1)
     printf( "layer 1 to layer 0: Update weights ...\n" );
-    neuralNets->activationFunctions[0]->updateWeights(
+    updateWeights(
         layers[1],
         layers[0],
         connections[0],
@@ -302,4 +331,127 @@ inline void Trainer::backwardProp(
         regularParam,
         cublasHandle,
         stream1 );
+}
+
+inline void Trainer::forwardOutput(
+    const Layer& sourceLayer,
+    const Layer& targetLayer,
+    const Connection& connection,
+    const unsigned int numInstances,
+    const std::shared_ptr<ActivationFunction> actFunction,
+    cublasHandle_t cublasHandle,
+    cudaStream_t stream )
+{
+    const float alpha = 1.0f;
+    const float beta = 0.0f;
+    // Multiply input matrix by weight matrix
+    cublasErrorCheck( cublasSgemm(
+        cublasHandle,
+        CUBLAS_OP_N,
+        CUBLAS_OP_N,
+        numInstances,
+        connection.numFeaturesOut,
+        connection.numFeaturesIn,
+        &alpha,
+        sourceLayer.dOutputMat,
+        numInstances,
+        connection.dWeightMat,
+        connection.numFeaturesIn,
+        &beta,
+        targetLayer.dOutputMat,
+        numInstances ) );
+    actFunction->forwardActivate(
+        targetLayer,
+        stream );
+}
+
+inline void Trainer::backPropError(
+    const Layer& sourceLayer,
+    const Layer& targetLayer,
+    const Connection& connection,
+    const unsigned int numInstances,
+    const std::shared_ptr<ActivationFunction> actFunction,
+    cublasHandle_t cublasHandle,
+    cudaStream_t stream )
+{
+    const float alpha = 1.0f;
+    const float beta = 0.0f;
+
+    cublasErrorCheck( cublasSgemm(
+        cublasHandle,
+        CUBLAS_OP_N,
+        CUBLAS_OP_T,
+        numInstances,
+        // Exclude bias
+        targetLayer.numNodes,
+        sourceLayer.numNodes,
+        &alpha,
+        sourceLayer.dErrorMat,
+        numInstances,
+        connection.dWeightMat,
+        targetLayer.numFeatures,
+        &beta,
+        targetLayer.dErrorMat,
+        numInstances ) );
+    actFunction->backwardActivate(
+        targetLayer,
+        stream );
+}
+
+inline void Trainer::updateWeights(
+    const Layer& sourceLayer,
+    const Layer& targetLayer,
+    const Connection& connection,
+    const unsigned int numInstances,
+    const float learningParam,
+    const float regularParam,
+    cublasHandle_t cublasHandle,
+    cudaStream_t stream )
+{
+    const float alpha = 1.0f;
+    const float beta = 0.0f;
+
+    // Compute delta weight matrix
+    cublasErrorCheck( cublasSgemm(
+        cublasHandle,
+        CUBLAS_OP_T,
+        CUBLAS_OP_N,
+        connection.numFeaturesIn,
+        connection.numFeaturesOut,
+        numInstances,
+        &alpha,
+        targetLayer.dOutputMat,
+        numInstances,
+        sourceLayer.dErrorMat,
+        numInstances,
+        &beta,
+        connection.dDeltaWeightMat,
+        connection.numFeaturesIn ) );
+    // Update weight matrix
+    UpdateWeightMat<<<
+        connection.uwKernalConfig.gridDim,
+        connection.uwKernalConfig.blockDim,
+        0,
+        stream >>>(
+            connection.dWeightMat,
+            connection.dDeltaWeightMat,
+            learningParam,
+            regularParam,
+            connection.numFeaturesIn,
+            connection.weightMatSize );
+    cudaErrorCheck( cudaGetLastError() );
+
+    // Copy from device to host
+    // For testing gradient descent
+    // cudaErrorCheck( cudaMemcpy(
+    //     weightMat,
+    //     dWeightMat,
+    //     weightMatSize * sizeof( float ),
+    //     cudaMemcpyDeviceToHost ) );
+
+    // float sum = 0.0f;
+    // for (unsigned int i = 0; i < weightMatSize; i++)
+    //     sum += weightMat[i];
+
+    // printf( "Back propagate completed, weight sum: %f\n", sum );
 }

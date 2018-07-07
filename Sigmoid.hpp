@@ -14,20 +14,12 @@ namespace MiniNeuralNetwork
     {
         unsigned short standardizeOutput( float output ) final;
 
-        void forwardOutput(
-            const Layer& sourceLayer,
+        void forwardActivate(
             const Layer& targetLayer,
-            const Connection& connection,
-            const unsigned int numInstances,
-            cublasHandle_t cublasHandle,
             cudaStream_t stream ) final;
 
-        void backPropError(
-            const Layer& sourceLayer,
+        void backwardActivate(
             const Layer& targetLayer,
-            const Connection& connection,
-            const unsigned int numInstances,
-            cublasHandle_t cublasHandle,
             cudaStream_t stream ) final;
 
         void computeOutputLayerError(

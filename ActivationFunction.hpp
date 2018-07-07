@@ -13,20 +13,12 @@ namespace MiniNeuralNetwork
         // Map output domain to output 0 or 1
         virtual unsigned short standardizeOutput( float output ) = 0;
 
-        virtual void forwardOutput(
-            const Layer& sourceLayer,
+        virtual void forwardActivate(
             const Layer& targetLayer,
-            const Connection& connection,
-            const unsigned int numInstances,
-            cublasHandle_t cublasHandle,
             cudaStream_t stream ) = 0;
-
-        virtual void backPropError(
-            const Layer& sourceLayer,
+        
+        virtual void backwardActivate(
             const Layer& targetLayer,
-            const Connection& connection,
-            const unsigned int numInstances,
-            cublasHandle_t cublasHandle,
             cudaStream_t stream ) = 0;
 
         virtual void computeOutputLayerError(
@@ -40,16 +32,6 @@ namespace MiniNeuralNetwork
             const Layer& outputLayer,
             cublasHandle_t cublasHandle,
             cudaStream_t stream ) = 0;
-
-        void updateWeights(
-            const Layer& sourceLayer,
-            const Layer& targetLayer,
-            const Connection& connection,
-            const unsigned int numInstances,
-            const float learningParam,
-            const float regularParam,
-            cublasHandle_t cublasHandle,
-            cudaStream_t stream );
     };
 }
 

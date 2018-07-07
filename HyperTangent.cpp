@@ -51,6 +51,7 @@ __global__ void ComputeHyperTangentCost(
         -logf( offset ) : -logf( 1.0f - offset );
 }
 
+
 using namespace MiniNeuralNetwork;
 
 unsigned short HyperTangentFunction::standardizeOutput( float output )
@@ -58,32 +59,10 @@ unsigned short HyperTangentFunction::standardizeOutput( float output )
     return (unsigned short) std::lroundf( output / 2.0f + 0.5f );
 }
 
-void HyperTangentFunction::forwardOutput(
-    const Layer& sourceLayer,
+void HyperTangentFunction::forwardActivate(
     const Layer& targetLayer,
-    const Connection& connection,
-    const unsigned int numInstances,
-    cublasHandle_t cublasHandle,
     cudaStream_t stream )
 {
-    const float alpha = 1.0f;
-    const float beta = 0.0f;
-    // Multiply input matrix by weight matrix
-    cublasErrorCheck( cublasSgemm(
-        cublasHandle,
-        CUBLAS_OP_N,
-        CUBLAS_OP_N,
-        numInstances,
-        connection.numFeaturesOut,
-        connection.numFeaturesIn,
-        &alpha,
-        sourceLayer.dOutputMat,
-        numInstances,
-        connection.dWeightMat,
-        connection.numFeaturesIn,
-        &beta,
-        targetLayer.dOutputMat,
-        numInstances ) );
     HyperTangent<<<
         targetLayer.sigKernalConfig.gridDim,
         targetLayer.sigKernalConfig.blockDim,
@@ -95,33 +74,10 @@ void HyperTangentFunction::forwardOutput(
     cudaErrorCheck( cudaGetLastError() );
 }
 
-void HyperTangentFunction::backPropError(
-    const Layer& sourceLayer,
+void HyperTangentFunction::backwardActivate(
     const Layer& targetLayer,
-    const Connection& connection,
-    const unsigned int numInstances,
-    cublasHandle_t cublasHandle,
     cudaStream_t stream )
 {
-    const float alpha = 1.0f;
-    const float beta = 0.0f;
-
-    cublasErrorCheck( cublasSgemm(
-        cublasHandle,
-        CUBLAS_OP_N,
-        CUBLAS_OP_T,
-        numInstances,
-        // Exclude bias
-        targetLayer.numNodes,
-        sourceLayer.numNodes,
-        &alpha,
-        sourceLayer.dErrorMat,
-        numInstances,
-        connection.dWeightMat,
-        targetLayer.numFeatures,
-        &beta,
-        targetLayer.dErrorMat,
-        numInstances ) );
     DHyperTangent<<<
         targetLayer.sigKernalConfig.gridDim,
         targetLayer.sigKernalConfig.blockDim,

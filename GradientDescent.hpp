@@ -42,7 +42,31 @@ namespace MiniNeuralNetwork
                 const float regularParam,
                 cudaStream_t stream1,
                 cudaStream_t stream2 );
-
+            inline void forwardOutput(
+                const Layer& sourceLayer,
+                const Layer& targetLayer,
+                const Connection& connection,
+                const unsigned int numInstances,
+                const std::shared_ptr<ActivationFunction> actFunction,
+                cublasHandle_t cublasHandle,
+                cudaStream_t stream );
+            inline void backPropError(
+                const Layer& sourceLayer,
+                const Layer& targetLayer,
+                const Connection& connection,
+                const unsigned int numInstances,
+                const std::shared_ptr<ActivationFunction> actFunction,
+                cublasHandle_t cublasHandle,
+                cudaStream_t stream );
+            inline void updateWeights(
+                const Layer& sourceLayer,
+                const Layer& targetLayer,
+                const Connection& connection,
+                const unsigned int numInstances,
+                const float learningParam,
+                const float regularParam,
+                cublasHandle_t cublasHandle,
+                cudaStream_t stream );
 
             std::shared_ptr<MiniNeuralNets> neuralNets = nullptr;
             cudaEvent_t* backPropCompletes             = nullptr;
