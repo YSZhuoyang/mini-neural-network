@@ -53,7 +53,7 @@ __global__ void ComputeSigmoidCost(
 
 using namespace MiniNeuralNetwork;
 
-unsigned short SigmoidFunction::standardizeOutputLabel( float output )
+unsigned short SigmoidFunction::standardizeOutput( float output )
 {
     return (unsigned short) std::lroundf( output );
 }

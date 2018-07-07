@@ -73,14 +73,14 @@ namespace MiniNeuralNetwork
             cudaErrorCheck( cudaFree( connection.dDeltaWeightMat ) );
         };
 
-        float* weightMat;
-        float* dWeightMat;
-        float* dDeltaWeightMat;
         KernalConfig uwKernalConfig;
-        unsigned int weightMatSize;
-        unsigned int numFeaturesIn;
+        float* weightMat            = nullptr;
+        float* dWeightMat           = nullptr;
+        float* dDeltaWeightMat      = nullptr;
+        unsigned int weightMatSize  = 0;
+        unsigned int numFeaturesIn  = 0;
         // Number of output features, which is equal to the number of nodes in the next layer
-        unsigned int numFeaturesOut;
+        unsigned int numFeaturesOut = 0;
     };
 }
 

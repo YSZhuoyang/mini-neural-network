@@ -11,7 +11,7 @@ namespace MiniNeuralNetwork
 
     struct HyperTangentFunction : public ActivationFunction
     {
-        unsigned short standardizeOutputLabel( float output ) final;
+        unsigned short standardizeOutput( float output ) final;
 
         void forwardOutput(
             const Layer& sourceLayer,

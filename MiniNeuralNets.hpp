@@ -4,13 +4,14 @@
 
 #include "ActivationFunction.hpp"
 
+
 namespace MiniNeuralNetwork
 {
     struct MiniNeuralNets
     {
         MiniNeuralNets(
             const std::vector<unsigned int>& architecture,
-            std::shared_ptr<ActivationFunction> actFunction );
+            const std::vector<std::shared_ptr<ActivationFunction>>& activationFunctions );
         ~MiniNeuralNets();
 
         Layer* initializeLayers( const unsigned int numInstances );
@@ -18,12 +19,12 @@ namespace MiniNeuralNetwork
         void initializeConnections();
         void destroyConnections();
 
-        std::unique_ptr<unsigned int[]> architecture           = nullptr;
-        Connection* connections                                = nullptr;
-        std::shared_ptr<ActivationFunction> activationFunction = nullptr;
-        unsigned short numLayers                               = 0;
-        unsigned short numHiddenLayers                         = 0;
-        unsigned short numConnections                          = 0;
+        std::unique_ptr<unsigned int[]> architecture                               = nullptr;
+        std::unique_ptr<std::shared_ptr<ActivationFunction>[]> activationFunctions = nullptr;
+        Connection* connections                                                    = nullptr;
+        unsigned short numLayers                                                   = 0;
+        unsigned short numHiddenLayers                                             = 0;
+        unsigned short numConnections                                              = 0;
     };
 }
 

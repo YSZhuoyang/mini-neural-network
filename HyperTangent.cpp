@@ -9,10 +9,7 @@ __global__ void HyperTangent(
     const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= subMatSize) return;
 
-    float expOfDotProd = expf( dOutputMat[eleId] );
-    float expOfMinusDotProd = 1.0f / expOfDotProd;
-    dOutputMat[eleId] =
-        ( expOfDotProd - expOfMinusDotProd ) / ( expOfDotProd + expOfMinusDotProd );
+    dOutputMat[eleId] = tanhf( dOutputMat[eleId] );
 }
 
 __global__ void DHyperTangent(
@@ -56,7 +53,7 @@ __global__ void ComputeHyperTangentCost(
 
 using namespace MiniNeuralNetwork;
 
-unsigned short HyperTangentFunction::standardizeOutputLabel( float output )
+unsigned short HyperTangentFunction::standardizeOutput( float output )
 {
     return (unsigned short) std::lroundf( output / 2.0f + 0.5f );
 }

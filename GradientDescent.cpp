@@ -50,7 +50,7 @@ void Trainer::train(
     const float costThreshold )
 {
     const unsigned short numLayers = neuralNets->numLayers;
-    const unsigned short numConnections = neuralNets->numConnections;
+    const unsigned short numHiddenLayers = neuralNets->numHiddenLayers;
 
     /******** Init device training data ********/
 
@@ -88,9 +88,8 @@ void Trainer::train(
     // Start gradient descent
     cudaErrorCheck( cudaStreamWaitEvent( stream1, testComplete, 0 ) );
     cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
-    float learningParam = -learningRate / (float) numInstances;
-    unsigned int iter = 0;
-    while (iter++ < maxIter)
+    const float learningParam = -learningRate / (float) numInstances;
+    for (unsigned int i = 0; i < maxIter; i++)
     {
         forwardProp( layers, numInstances, stream1 );
         backwardProp(
@@ -111,7 +110,9 @@ void Trainer::train(
     cudaErrorCheck( cudaMalloc(
         (void**) &dCostMat,
         classIndexMatSize * sizeof( float ) ) );
-    float costSum = neuralNets->activationFunction->computeCost(
+    std::shared_ptr<ActivationFunction> outputActFunction =
+        neuralNets->activationFunctions[numHiddenLayers];
+    const float costSum = outputActFunction->computeCost(
         dCostMat,
         dClassIndexMat,
         layers[numLayers - 1],
@@ -136,7 +137,8 @@ void Trainer::test(
     const unsigned short* classIndexMat,
     const unsigned int numInstances )
 {
-    const unsigned int numLayers = neuralNets->numLayers;
+    const unsigned short numLayers = neuralNets->numLayers;
+    const unsigned short numHiddenLayers = neuralNets->numHiddenLayers;
 
     // Init cuda stream resources
     cudaStream_t stream;
@@ -178,6 +180,8 @@ void Trainer::test(
     unsigned int numOutputFeas = layers[numLayers - 1].numNodes;
     float* outputMat = layers[numLayers - 1].outputMat;
     float* dOutputMat = layers[numLayers - 1].dOutputMat;
+    std::shared_ptr<ActivationFunction> outputActFunction =
+        neuralNets->activationFunctions[numHiddenLayers];
 
     cudaErrorCheck( cudaMemcpy(
         outputMat,
@@ -190,7 +194,7 @@ void Trainer::test(
         bool correct;
         if (numOutputFeas == 1)
             correct = classIndexMat[i] ==
-                neuralNets->activationFunction->standardizeOutputLabel( outputMat[i] );
+                outputActFunction->standardizeOutput( outputMat[i] );
         else
         {
             float max = outputMat[i];
@@ -231,7 +235,7 @@ inline void Trainer::forwardProp(
     for (unsigned short i = 0; i < numConnections; i++)
     {
         printf( "layer %d to layer %d: Forward output ...\n", i, i + 1 );
-        neuralNets->activationFunction->forwardOutput(
+        neuralNets->activationFunctions[i]->forwardOutput(
             layers[i],
             layers[i + 1],
             connections[i],
@@ -253,9 +257,8 @@ inline void Trainer::backwardProp(
     const unsigned short numLayers = neuralNets->numLayers;
     const unsigned short numHiddenLayers = neuralNets->numHiddenLayers;
     Connection* connections = neuralNets->connections;
-    std::shared_ptr<ActivationFunction> activationFunction = neuralNets->activationFunction;
 
-    activationFunction->computeOutputLayerError(
+    neuralNets->activationFunctions[numHiddenLayers]->computeOutputLayerError(
         dClassIndexMat,
         layers[numLayers - 1],
         stream1 );
@@ -266,7 +269,7 @@ inline void Trainer::backwardProp(
     {
         printf( "layer %d to layer %d: Backprop error ...\n", i + 1, i );
         cublasErrorCheck( cublasSetStream( cublasHandle, stream2 ) );
-        activationFunction->backPropError(
+        neuralNets->activationFunctions[i]->backPropError(
             layers[i + 1],
             layers[i],
             connections[i],
@@ -278,7 +281,7 @@ inline void Trainer::backwardProp(
         printf( "layer %d to layer %d: Update weights ...\n", i + 1, i );
         cudaErrorCheck( cudaStreamWaitEvent( stream1, backPropCompletes[i - 1], 0 ) );
         cublasErrorCheck( cublasSetStream( cublasHandle, stream1 ) );
-        activationFunction->updateWeights(
+        neuralNets->activationFunctions[i]->updateWeights(
             layers[i + 1],
             layers[i],
             connections[i],
@@ -290,7 +293,7 @@ inline void Trainer::backwardProp(
     }
 
     printf( "layer 1 to layer 0: Update weights ...\n" );
-    activationFunction->updateWeights(
+    neuralNets->activationFunctions[0]->updateWeights(
         layers[1],
         layers[0],
         connections[0],
