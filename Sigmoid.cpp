@@ -74,7 +74,6 @@ void SigmoidFunction::forwardActivate(
     cudaErrorCheck( cudaGetLastError() );
 }
 
-
 void SigmoidFunction::backwardActivate(
     const Layer& targetLayer,
     cudaStream_t stream )
@@ -89,80 +88,6 @@ void SigmoidFunction::backwardActivate(
             targetLayer.errorMatSize );
     cudaErrorCheck( cudaGetLastError() );
 }
-// void SigmoidFunction::forwardOutput(
-//     const Layer& sourceLayer,
-//     const Layer& targetLayer,
-//     const Connection& connection,
-//     const unsigned int numInstances,
-//     cublasHandle_t cublasHandle,
-//     cudaStream_t stream )
-// {
-//     const float alpha = 1.0f;
-//     const float beta = 0.0f;
-//     // Multiply input matrix by weight matrix
-//     cublasErrorCheck( cublasSgemm(
-//         cublasHandle,
-//         CUBLAS_OP_N,
-//         CUBLAS_OP_N,
-//         numInstances,
-//         connection.numFeaturesOut,
-//         connection.numFeaturesIn,
-//         &alpha,
-//         sourceLayer.dOutputMat,
-//         numInstances,
-//         connection.dWeightMat,
-//         connection.numFeaturesIn,
-//         &beta,
-//         targetLayer.dOutputMat,
-//         numInstances ) );
-//     Sigmoid<<<
-//         targetLayer.sigKernalConfig.gridDim,
-//         targetLayer.sigKernalConfig.blockDim,
-//         0,
-//         stream >>>(
-//             targetLayer.dOutputMat,
-//             // Error mat size = output mat size without X0s
-//             targetLayer.errorMatSize );
-//     cudaErrorCheck( cudaGetLastError() );
-// }
-
-// void SigmoidFunction::backPropError(
-//     const Layer& sourceLayer,
-//     const Layer& targetLayer,
-//     const Connection& connection,
-//     const unsigned int numInstances,
-//     cublasHandle_t cublasHandle,
-//     cudaStream_t stream )
-// {
-//     const float alpha = 1.0f;
-//     const float beta = 0.0f;
-
-//     cublasErrorCheck( cublasSgemm(
-//         cublasHandle,
-//         CUBLAS_OP_N,
-//         CUBLAS_OP_T,
-//         numInstances,
-//         // Exclude bias
-//         targetLayer.numNodes,
-//         sourceLayer.numNodes,
-//         &alpha,
-//         sourceLayer.dErrorMat,
-//         numInstances,
-//         connection.dWeightMat,
-//         targetLayer.numFeatures,
-//         &beta,
-//         targetLayer.dErrorMat,
-//         numInstances ) );
-//     DSigmoid<<<
-//         targetLayer.sigKernalConfig.gridDim,
-//         targetLayer.sigKernalConfig.blockDim,
-//         0,
-//         stream >>>(
-//             targetLayer.dErrorMat,
-//             targetLayer.dOutputMat,
-//             targetLayer.errorMatSize );
-//     cudaErrorCheck( cudaGetLastError() );
-// }
 
 void SigmoidFunction::computeOutputLayerError(
     const unsigned short* dClassIndexMat,
