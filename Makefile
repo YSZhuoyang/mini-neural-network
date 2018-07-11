@@ -24,10 +24,10 @@ Helper.o: Helper.cpp Helper.hpp BasicDataStructures.hpp
 ArffImporter.o: ArffImporter.cpp ArffImporter.hpp Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c ArffImporter.cpp
 
-Sigmoid.o: Sigmoid.cpp Sigmoid.hpp ActivationFunction.hpp
+Sigmoid.o: Sigmoid.cpp Sigmoid.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Sigmoid.cpp
 
-HyperTangent.o: HyperTangent.cpp HyperTangent.hpp ActivationFunction.hpp
+HyperTangent.o: HyperTangent.cpp HyperTangent.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c HyperTangent.cpp
 
 MiniNeuralNets.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction.hpp Helper.o
@@ -37,7 +37,7 @@ GradientDescent.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets.o
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c GradientDescent.cpp
 
 Main.o: Main.cpp GradientDescent.o MiniNeuralNets.o Sigmoid.o HyperTangent.o
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Main.cpp
+	$(NVCC) ${NVCCCFLAGS} -c Main.cpp
 
 ###################### Compile with debug enabled #######################
 
@@ -52,10 +52,10 @@ Helper_debug.o: Helper.cpp Helper.hpp BasicDataStructures.hpp
 ArffImporter_debug.o: ArffImporter.cpp ArffImporter.hpp Helper_debug.o
 	$(NVCC) ${NVCCCFLAGS_DEBUG} -c ArffImporter.cpp -o ArffImporter_debug.o
 
-Sigmoid_debug.o: Sigmoid.cpp Sigmoid.hpp ActivationFunction.hpp
+Sigmoid_debug.o: Sigmoid.cpp Sigmoid.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c Sigmoid.cpp -o Sigmoid_debug.o
 
-HyperTangent_debug.o: HyperTangent.cpp HyperTangent.hpp ActivationFunction.hpp
+HyperTangent_debug.o: HyperTangent.cpp HyperTangent.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c HyperTangent.cpp -o HyperTangent_debug.o
 
 MiniNeuralNets_debug.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction.hpp Helper_debug.o
@@ -65,7 +65,7 @@ GradientDescent_debug.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets_
 	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c GradientDescent.cpp -o GradientDescent_debug.o
 
 Main_debug.o: Main.cpp GradientDescent_debug.o MiniNeuralNets_debug.o Sigmoid_debug.o HyperTangent_debug.o
-	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c Main.cpp -o Main_debug.o
+	$(NVCC) ${NVCCCFLAGS_DEBUG} -c Main.cpp -o Main_debug.o
 
 ################################# Clean #################################
 
