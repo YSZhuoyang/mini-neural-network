@@ -21,10 +21,10 @@ Helper.o: Helper.cpp Helper.hpp BasicDataStructures.hpp
 ArffImporter.o: ArffImporter.cpp ArffImporter.hpp Helper.o
 	$(NVCC) ${NVCCCFLAGS} -c ArffImporter.cpp
 
-Sigmoid.o: Sigmoid.cpp Sigmoid.hpp ActivationFunction.hpp
+Sigmoid.o: Sigmoid.cpp Sigmoid.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Sigmoid.cpp
 
-HyperTangent.o: HyperTangent.cpp HyperTangent.hpp ActivationFunction.hpp
+HyperTangent.o: HyperTangent.cpp HyperTangent.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c HyperTangent.cpp
 
 MiniNeuralNets.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction.hpp Helper.o
@@ -34,7 +34,7 @@ GradientDescent.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets.o
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c GradientDescent.cpp
 
 Main.o: Main.cpp GradientDescent.o MiniNeuralNets.o Sigmoid.o HyperTangent.o
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Main.cpp
+	$(NVCC) ${NVCCCFLAGS} -c Main.cpp
 
 ################################# Clean #################################
 
