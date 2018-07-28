@@ -5,7 +5,6 @@
 #include "ActivationFunction.hpp"
 
 
-
 namespace MiniNeuralNetwork
 {
     using namespace MyHelper;

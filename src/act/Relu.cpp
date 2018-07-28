@@ -21,7 +21,7 @@ __global__ void DRelu(
     const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= errorMatSize) return;
 
-    float error = (float) (dOutputMat[eleId] > 0.0f);
+    float error = (float) (dOutputMat[eleId] >= 0.0f);
     dErrorMat[eleId] *= error;
 }
 
