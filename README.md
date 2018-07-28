@@ -11,6 +11,7 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
 
 * Sigmoid.
 * Hyper Tangent.
+* Relu.
 
 ### Gragh representation
 
@@ -52,7 +53,7 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
     i: index of a gradient descent iteration
     l: layer index
 
-    r: regularization param
+    r: l2 regularization param
     lr: learning rate
 
     h(x): predicted result given by the model
@@ -67,7 +68,8 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
 #### Forward propagation
 Activate each layer with an activation function (Sigmoid / Hyper Tangent) from left to right:
 
-    Linear output: Z = W x In
+    Linear output (with bias included in matrices): Z = W x In
+    Relu output: Out = g(Z) = max(0, Z)
     Sigmoid output: Out = g(Z) = 1 / (1 + pow(e, -Z))
     Hyper Tangent output: output = g(Z) = (pow(e, Z) - pow(e, -Z)) / (pow(e, Z) + pow(e, -Z))
 
@@ -78,6 +80,7 @@ Activate each layer with an activation function (Sigmoid / Hyper Tangent) from l
 
   2. Backward propagate error in each layer from right to left:
 
+    Relu error: E = Out >= 0 ? 1 : 0
     Sigmoid error: E[l] = WT x E[l + 1] * output[l] * (1 - output[l])
     Hyper Tangent error: E[l] = WT x E[l + 1] * (1 - output[l] * output[l])
 

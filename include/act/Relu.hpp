@@ -1,6 +1,6 @@
 
-#ifndef SIGMOID_HPP
-#define SIGMOID_HPP
+#ifndef RELU_HPP
+#define RELU_HPP
 
 #include "ActivationFunction.hpp"
 
@@ -9,7 +9,7 @@ namespace MiniNeuralNetwork
 {
     using namespace MyHelper;
 
-    struct SigmoidFunction : public ActivationFunction
+    struct ReluFunction : public ActivationFunction
     {
         unsigned short standardizeOutput( float output ) final;
 
