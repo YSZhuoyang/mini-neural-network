@@ -1,5 +1,5 @@
 
-#include "Helper.hpp"
+#include "include/util/Helper.hpp"
 
 
 bool MyHelper::IsLetter( const char c )

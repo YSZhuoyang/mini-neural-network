@@ -1,5 +1,6 @@
 .vscode/
+build/
+bin/
 *.h.gch
 *.o
 *exec*
-

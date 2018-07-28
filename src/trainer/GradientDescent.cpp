@@ -1,5 +1,5 @@
 
-#include "GradientDescent.hpp"
+#include "include/trainer/GradientDescent.hpp"
 
 
 __global__ void UpdateWeightMat(

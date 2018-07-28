@@ -2,7 +2,8 @@
 #ifndef GRADIENT_DESCENT_HPP
 #define GRADIENT_DESCENT_HPP
 
-#include "MiniNeuralNets.hpp"
+#include "include/datastruct/MiniNeuralNets.hpp"
+
 
 namespace MiniNeuralNetwork
 {

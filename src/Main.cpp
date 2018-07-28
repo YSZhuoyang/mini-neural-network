@@ -1,8 +1,8 @@
 
-#include "ArffImporter.hpp"
-#include "Sigmoid.hpp"
-#include "HyperTangent.hpp"
-#include "GradientDescent.hpp"
+#include "include/util/ArffImporter.hpp"
+#include "include/act/Sigmoid.hpp"
+#include "include/act/HyperTangent.hpp"
+#include "include/trainer/GradientDescent.hpp"
 
 
 int main()
