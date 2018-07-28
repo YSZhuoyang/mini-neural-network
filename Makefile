@@ -32,7 +32,7 @@ NVCC = nvcc
 NVCCCFLAGS = -arch=sm_50 -std=c++14 -O3 -use_fast_math -lcublas
 CUFLAGS = -x cu
 OBJECTS = $(BUILDDIR)/Helper.o $(BUILDDIR)/ArffImporter.o $(BUILDDIR)/Sigmoid.o $(BUILDDIR)/HyperTangent.o
-OBJECTS += $(BUILDDIR)/MiniNeuralNets.o $(BUILDDIR)/GradientDescent.o $(BUILDDIR)/Main.o
+OBJECTS += $(BUILDDIR)/Relu.o $(BUILDDIR)/MiniNeuralNets.o $(BUILDDIR)/GradientDescent.o $(BUILDDIR)/Main.o
 
 ############################# Compile exec ##############################
 
@@ -56,6 +56,9 @@ $(BUILDDIR)/Sigmoid.o: $(ACTSRCDIR)/Sigmoid.cpp $(ACTHEADERDIR)/Sigmoid.hpp $(DA
 
 $(BUILDDIR)/HyperTangent.o: $(ACTSRCDIR)/HyperTangent.cpp $(ACTHEADERDIR)/HyperTangent.hpp $(DATAHEADERDIR)/Layer.hpp $(DATAHEADERDIR)/Connection.hpp $(ACTHEADERDIR)/ActivationFunction.hpp
 	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -I $(INCACTSRC) -c $(ACTSRCDIR)/HyperTangent.cpp -o $(BUILDDIR)/HyperTangent.o
+
+$(BUILDDIR)/Relu.o: $(ACTSRCDIR)/Relu.cpp $(ACTHEADERDIR)/Relu.hpp $(DATAHEADERDIR)/Layer.hpp $(DATAHEADERDIR)/Connection.hpp $(ACTHEADERDIR)/ActivationFunction.hpp
+	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -I $(INCACTSRC) -c $(ACTSRCDIR)/Relu.cpp -o $(BUILDDIR)/Relu.o
 
 $(BUILDDIR)/MiniNeuralNets.o: $(DATASRCDIR)/MiniNeuralNets.cpp $(DATAHEADERDIR)/MiniNeuralNets.hpp $(DATAHEADERDIR)/Layer.hpp $(DATAHEADERDIR)/Connection.hpp $(ACTHEADERDIR)/ActivationFunction.hpp $(BUILDDIR)/Helper.o
 	$(NVCC) ${NVCCCFLAGS} -I $(INCDATASRC) -c $(DATASRCDIR)/MiniNeuralNets.cpp -o $(BUILDDIR)/MiniNeuralNets.o
