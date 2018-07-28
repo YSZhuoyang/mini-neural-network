@@ -3,8 +3,8 @@
 #define ARFF_IMPORTER_HPP
 
 
-#include "BasicDataStructures.hpp"
-#include "Helper.hpp"
+#include "include/datastruct/BasicDataStructures.hpp"
+#include "include/util/Helper.hpp"
 #include <string>
 
 

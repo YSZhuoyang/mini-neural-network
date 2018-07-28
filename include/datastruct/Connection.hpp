@@ -2,7 +2,7 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include "Helper.hpp"
+#include "include/util/Helper.hpp"
 
 
 namespace MiniNeuralNetwork
@@ -27,12 +27,12 @@ namespace MiniNeuralNetwork
 
             // Randomly init weight matrix in Gaussian distribution (He et al. 2015)
             std::random_device random;
-            std::mt19937 generator(random());
+            std::mt19937 generator( random() );
             std::normal_distribution<float> normalDist;
 
-            const float scalar = sqrtf(2.0f / (float) numFeaturesIn);
+            const float scalar = sqrtf( 2.0f / (float) numFeaturesIn );
             for (unsigned int i = 0; i < weightMatSize; i++)
-                weightMat[i] = ((i + 1) % numFeaturesIn == 0) ? 0.0f : normalDist(generator) * scalar;
+                weightMat[i] = ((i + 1) % numFeaturesIn == 0) ? 0.0f : normalDist( generator ) * scalar;
 
             cudaErrorCheck( cudaMemcpyAsync(
                 dWeightMat,

@@ -2,7 +2,7 @@
 #ifndef MINI_NEURAL_NETS_HPP
 #define MINI_NEURAL_NETS_HPP
 
-#include "ActivationFunction.hpp"
+#include "include/act/ActivationFunction.hpp"
 
 
 namespace MiniNeuralNetwork

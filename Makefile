@@ -1,73 +1,72 @@
 
 
-################################ Macros #################################
+################################# Paths #################################
+
+BUILDDIR = build
+BINDIR = bin
+
+DATAHEADERDIR = include/datastruct
+ACTHEADERDIR = include/act
+TRAINERHEADERDIR = include/trainer
+UTILHEADERDIR = include/util
+
+DATASRCDIR = src/datastruct
+ACTSRCDIR = src/act
+TRAINERSRCDIR = src/trainer
+UTILSRCDIR = src/util
+
+INCACTSRC = src/act/../..
+INCDATASRC = src/datastruct/../..
+INCTRAINERSRC = src/trainer/../..
+INCUTILSRC = src/util/../../
+
+INCACTHEADER = include/act/../..
+INCDATAHEADER = include/datastruct/../..
+INCTRAINERHEADER = include/trainer/../..
+INCUTILHEADER = include/util/../../
+
+############################# Build options #############################
 
 SHELL = /bin/sh
 NVCC = nvcc
 NVCCCFLAGS = -arch=sm_50 -std=c++14 -O3 -use_fast_math -lcublas
-# Enable host code debug in vscode
-NVCCCFLAGS_DEBUG = -arch=sm_50 -std=c++14 -g -G -use_fast_math -lcublas
 CUFLAGS = -x cu
-OBJECTS = Helper.o ArffImporter.o Sigmoid.o HyperTangent.o MiniNeuralNets.o GradientDescent.o Main.o
-OBJECTS_DEBUG = Helper_debug.o ArffImporter_debug.o Sigmoid_debug.o HyperTangent_debug.o MiniNeuralNets_debug.o GradientDescent_debug.o Main_debug.o
+OBJECTS = $(BUILDDIR)/Helper.o $(BUILDDIR)/ArffImporter.o $(BUILDDIR)/Sigmoid.o $(BUILDDIR)/HyperTangent.o
+OBJECTS += $(BUILDDIR)/MiniNeuralNets.o $(BUILDDIR)/GradientDescent.o $(BUILDDIR)/Main.o
 
 ############################# Compile exec ##############################
 
-run: gpu_exec
+run: $(BINDIR)/gpu_exec
 
-gpu_exec: ${OBJECTS}
+# Enable host code debug in vscode
+debug: NVCCCFLAGS = -arch=sm_50 -std=c++14 -g -G -use_fast_math -lcublas
+debug: $(BINDIR)/gpu_exec
+
+$(BINDIR)/gpu_exec: ${OBJECTS}
 	$(NVCC) ${NVCCCFLAGS} -o $@ ${OBJECTS}
 
-Helper.o: Helper.cpp Helper.hpp BasicDataStructures.hpp
-	$(NVCC) ${NVCCCFLAGS} -c Helper.cpp
+$(BUILDDIR)/Helper.o: $(UTILSRCDIR)/Helper.cpp $(UTILHEADERDIR)/Helper.hpp $(DATAHEADERDIR)/BasicDataStructures.hpp
+	$(NVCC) ${NVCCCFLAGS} -I $(INCUTILSRC) -c $(UTILSRCDIR)/Helper.cpp -o $(BUILDDIR)/Helper.o
 
-ArffImporter.o: ArffImporter.cpp ArffImporter.hpp Helper.o
-	$(NVCC) ${NVCCCFLAGS} -c ArffImporter.cpp
+$(BUILDDIR)/ArffImporter.o: $(UTILSRCDIR)/ArffImporter.cpp $(UTILHEADERDIR)/ArffImporter.hpp $(BUILDDIR)/Helper.o
+	$(NVCC) ${NVCCCFLAGS} -I $(INCUTILSRC) -c $(UTILSRCDIR)/ArffImporter.cpp -o $(BUILDDIR)/ArffImporter.o
 
-Sigmoid.o: Sigmoid.cpp Sigmoid.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c Sigmoid.cpp
+$(BUILDDIR)/Sigmoid.o: $(ACTSRCDIR)/Sigmoid.cpp $(ACTHEADERDIR)/Sigmoid.hpp $(DATAHEADERDIR)/Layer.hpp $(DATAHEADERDIR)/Connection.hpp $(ACTHEADERDIR)/ActivationFunction.hpp
+	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -I $(INCACTSRC) -c $(ACTSRCDIR)/Sigmoid.cpp -o $(BUILDDIR)/Sigmoid.o
 
-HyperTangent.o: HyperTangent.cpp HyperTangent.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c HyperTangent.cpp
+$(BUILDDIR)/HyperTangent.o: $(ACTSRCDIR)/HyperTangent.cpp $(ACTHEADERDIR)/HyperTangent.hpp $(DATAHEADERDIR)/Layer.hpp $(DATAHEADERDIR)/Connection.hpp $(ACTHEADERDIR)/ActivationFunction.hpp
+	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -I $(INCACTSRC) -c $(ACTSRCDIR)/HyperTangent.cpp -o $(BUILDDIR)/HyperTangent.o
 
-MiniNeuralNets.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction.hpp Helper.o
-	$(NVCC) ${NVCCCFLAGS} -c MiniNeuralNets.cpp
+$(BUILDDIR)/MiniNeuralNets.o: $(DATASRCDIR)/MiniNeuralNets.cpp $(DATAHEADERDIR)/MiniNeuralNets.hpp $(DATAHEADERDIR)/Layer.hpp $(DATAHEADERDIR)/Connection.hpp $(ACTHEADERDIR)/ActivationFunction.hpp $(BUILDDIR)/Helper.o
+	$(NVCC) ${NVCCCFLAGS} -I $(INCDATASRC) -c $(DATASRCDIR)/MiniNeuralNets.cpp -o $(BUILDDIR)/MiniNeuralNets.o
 
-GradientDescent.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets.o
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -c GradientDescent.cpp
+$(BUILDDIR)/GradientDescent.o: $(TRAINERSRCDIR)/GradientDescent.cpp $(TRAINERHEADERDIR)/GradientDescent.hpp $(BUILDDIR)/MiniNeuralNets.o
+	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -I $(INCTRAINERSRC) -c $(TRAINERSRCDIR)/GradientDescent.cpp -o $(BUILDDIR)/GradientDescent.o
 
-Main.o: Main.cpp GradientDescent.o MiniNeuralNets.o Sigmoid.o HyperTangent.o
-	$(NVCC) ${NVCCCFLAGS} -c Main.cpp
-
-###################### Compile with debug enabled #######################
-
-debug: gpu_exec_debug
-
-gpu_exec_debug: ${OBJECTS_DEBUG}
-	$(NVCC) ${NVCCCFLAGS_DEBUG} -o $@ ${OBJECTS_DEBUG}
-
-Helper_debug.o: Helper.cpp Helper.hpp BasicDataStructures.hpp
-	$(NVCC) ${NVCCCFLAGS_DEBUG} -c Helper.cpp -o Helper_debug.o
-
-ArffImporter_debug.o: ArffImporter.cpp ArffImporter.hpp Helper_debug.o
-	$(NVCC) ${NVCCCFLAGS_DEBUG} -c ArffImporter.cpp -o ArffImporter_debug.o
-
-Sigmoid_debug.o: Sigmoid.cpp Sigmoid.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
-	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c Sigmoid.cpp -o Sigmoid_debug.o
-
-HyperTangent_debug.o: HyperTangent.cpp HyperTangent.hpp Layer.hpp Connection.hpp ActivationFunction.hpp
-	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c HyperTangent.cpp -o HyperTangent_debug.o
-
-MiniNeuralNets_debug.o: MiniNeuralNets.cpp MiniNeuralNets.hpp Layer.hpp Connection.hpp ActivationFunction.hpp Helper_debug.o
-	$(NVCC) ${NVCCCFLAGS_DEBUG} -c MiniNeuralNets.cpp -o MiniNeuralNets_debug.o
-
-GradientDescent_debug.o: GradientDescent.cpp GradientDescent.hpp MiniNeuralNets_debug.o
-	$(NVCC) ${NVCCCFLAGS_DEBUG} ${CUFLAGS} -c GradientDescent.cpp -o GradientDescent_debug.o
-
-Main_debug.o: Main.cpp GradientDescent_debug.o MiniNeuralNets_debug.o Sigmoid_debug.o HyperTangent_debug.o
-	$(NVCC) ${NVCCCFLAGS_DEBUG} -c Main.cpp -o Main_debug.o
+$(BUILDDIR)/Main.o: src/Main.cpp $(BUILDDIR)/GradientDescent.o $(BUILDDIR)/MiniNeuralNets.o $(BUILDDIR)/Sigmoid.o $(BUILDDIR)/HyperTangent.o
+	$(NVCC) ${NVCCCFLAGS} -I src/.. -c src/Main.cpp -o $(BUILDDIR)/Main.o
 
 ################################# Clean #################################
 
 clean:
-	-rm -f *.o *.h.gch *exec*
+	-rm -f $(BUILDDIR)/*.o $(BINDIR)/*exec*

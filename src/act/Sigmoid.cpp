@@ -1,18 +1,19 @@
 
-#include "HyperTangent.hpp"
+#include "include/act/Sigmoid.hpp"
 
 
-__global__ void HyperTangent(
+__global__ void Sigmoid(
     float* __restrict__ dOutputMat,
     const unsigned int subMatSize )
 {
     const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= subMatSize) return;
 
-    dOutputMat[eleId] = tanhf( dOutputMat[eleId] );
+    float output = dOutputMat[eleId];
+    dOutputMat[eleId] = 1.0f / (1.0f + expf( -output ));
 }
 
-__global__ void DHyperTangent(
+__global__ void DSigmoid(
     float* __restrict__ dErrorMat,
     const float* __restrict__ dOutputMat,
     const unsigned int errorMatSize )
@@ -20,11 +21,11 @@ __global__ void DHyperTangent(
     const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= errorMatSize) return;
 
-    float error = 1.0f - dOutputMat[eleId] * dOutputMat[eleId];
+    float error = dOutputMat[eleId] * (1.0f - dOutputMat[eleId]);
     dErrorMat[eleId] *= error;
 }
 
-__global__ void ComputeHyperTangentOutputLayerError(
+__global__ void ComputeSigmoidOutputLayerError(
     float* __restrict__ dErrorMat,
     float* __restrict__ dOutputMat,
     const unsigned short* __restrict__ dClassIndexMat,
@@ -33,10 +34,10 @@ __global__ void ComputeHyperTangentOutputLayerError(
     const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
     if (eleId >= errorMatSize) return;
 
-    dErrorMat[eleId] = dOutputMat[eleId] - (dClassIndexMat[eleId] ? 1.0f : -1.0f);
+    dErrorMat[eleId] = dOutputMat[eleId] - (float) dClassIndexMat[eleId];
 }
 
-__global__ void ComputeHyperTangentCost(
+__global__ void ComputeSigmoidCost(
     float* __restrict__ dCostMat,
     const float* __restrict__ dOutputMat,
     const unsigned short* __restrict__ dClassIndexMat,
@@ -46,24 +47,23 @@ __global__ void ComputeHyperTangentCost(
     if (eleId >= costMatSize) return;
 
     // Note that each element in dCostMat is always > 0
-    float offset = dOutputMat[eleId] / 2.0f + 0.5f;
     dCostMat[eleId] = (dClassIndexMat[eleId]) ?
-        -logf( offset ) : -logf( 1.0f - offset );
+        -logf( dOutputMat[eleId] ) : -logf( 1.0f - dOutputMat[eleId] );
 }
 
 
 using namespace MiniNeuralNetwork;
 
-unsigned short HyperTangentFunction::standardizeOutput( float output )
+unsigned short SigmoidFunction::standardizeOutput( float output )
 {
-    return (unsigned short) std::lroundf( output / 2.0f + 0.5f );
+    return (unsigned short) std::lroundf( output );
 }
 
-void HyperTangentFunction::forwardActivate(
+void SigmoidFunction::forwardActivate(
     const Layer& targetLayer,
     cudaStream_t stream )
 {
-    HyperTangent<<<
+    Sigmoid<<<
         targetLayer.sigKernalConfig.gridDim,
         targetLayer.sigKernalConfig.blockDim,
         0,
@@ -74,11 +74,11 @@ void HyperTangentFunction::forwardActivate(
     cudaErrorCheck( cudaGetLastError() );
 }
 
-void HyperTangentFunction::backwardActivate(
+void SigmoidFunction::backwardActivate(
     const Layer& targetLayer,
     cudaStream_t stream )
 {
-    DHyperTangent<<<
+    DSigmoid<<<
         targetLayer.sigKernalConfig.gridDim,
         targetLayer.sigKernalConfig.blockDim,
         0,
@@ -89,7 +89,7 @@ void HyperTangentFunction::backwardActivate(
     cudaErrorCheck( cudaGetLastError() );
 }
 
-void HyperTangentFunction::computeOutputLayerError(
+void SigmoidFunction::computeOutputLayerError(
     const unsigned short* dClassIndexMat,
     const Layer& outputLayer,
     cudaStream_t stream )
@@ -97,7 +97,7 @@ void HyperTangentFunction::computeOutputLayerError(
     if (outputLayer.layerType != OUTPUT_LAYER)
         throw( "computeOutputLayerError() can only be called by output layer.\n" );
 
-    ComputeHyperTangentOutputLayerError<<<
+    ComputeSigmoidOutputLayerError<<<
         outputLayer.ccKernalConfig.gridDim,
         outputLayer.ccKernalConfig.blockDim,
         0,
@@ -109,7 +109,7 @@ void HyperTangentFunction::computeOutputLayerError(
     cudaErrorCheck( cudaGetLastError() );
 }
 
-float HyperTangentFunction::computeCost(
+float SigmoidFunction::computeCost(
     float* dCostMat,
     const unsigned short* dClassIndexMat,
     const Layer& outputLayer,
@@ -120,7 +120,7 @@ float HyperTangentFunction::computeCost(
         throw( "computeCost() can only be called by output layer.\n" );
 
     float costSum = 0.0f;
-    ComputeHyperTangentCost<<<
+    ComputeSigmoidCost<<<
         outputLayer.sigKernalConfig.gridDim,
         outputLayer.sigKernalConfig.blockDim,
         0,
