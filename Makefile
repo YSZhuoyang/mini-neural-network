@@ -18,7 +18,8 @@ UTILSRCDIR = src/util
 INCACTSRC = src/act/../..
 INCDATASRC = src/datastruct/../..
 INCTRAINERSRC = src/trainer/../..
-INCUTILSRC = src/util/../../
+INCUTILSRC = src/util/../..
+INCLUDECUTLASS = lib/cutlass
 
 INCACTHEADER = include/act/../..
 INCDATAHEADER = include/datastruct/../..
@@ -64,7 +65,7 @@ $(BUILDDIR)/MiniNeuralNets.o: $(DATASRCDIR)/MiniNeuralNets.cpp $(DATAHEADERDIR)/
 	$(NVCC) ${NVCCCFLAGS} -I $(INCDATASRC) -c $(DATASRCDIR)/MiniNeuralNets.cpp -o $(BUILDDIR)/MiniNeuralNets.o
 
 $(BUILDDIR)/GradientDescent.o: $(TRAINERSRCDIR)/GradientDescent.cpp $(TRAINERHEADERDIR)/GradientDescent.hpp $(BUILDDIR)/MiniNeuralNets.o
-	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -I $(INCTRAINERSRC) -c $(TRAINERSRCDIR)/GradientDescent.cpp -o $(BUILDDIR)/GradientDescent.o
+	$(NVCC) ${NVCCCFLAGS} ${CUFLAGS} -I $(INCTRAINERSRC) -I $(INCLUDECUTLASS) -c $(TRAINERSRCDIR)/GradientDescent.cpp -o $(BUILDDIR)/GradientDescent.o
 
 $(BUILDDIR)/Main.o: src/Main.cpp $(BUILDDIR)/GradientDescent.o $(BUILDDIR)/MiniNeuralNets.o $(BUILDDIR)/Sigmoid.o $(BUILDDIR)/HyperTangent.o
 	$(NVCC) ${NVCCCFLAGS} -I src/.. -c src/Main.cpp -o $(BUILDDIR)/Main.o

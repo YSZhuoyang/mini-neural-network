@@ -1,5 +1,95 @@
 
 #include "include/trainer/GradientDescent.hpp"
+// #include "include/cutlass/cutlass/examples/00_basic_gemm.cu"
+
+#include <iostream>
+// Defines cutlass::gemm::Gemm, the generic Gemm computation template class.
+#include "lib/cutlass/cutlass/gemm/gemm.h"
+
+// Defines cutlass::gemm::SgemmTraits, the structural components for single-precision GEMM
+#include "lib/cutlass/cutlass/gemm/sgemm_traits.h"
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// This function defines a CUTLASS GEMM kernel instantiation, constructs its parameters object,
+// and launches it on the CUDA device.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Define a CUTLASS GEMM template and launch a GEMM kernel.
+cudaError_t CutlassSgemmNN(
+    int M,
+    int N,
+    int K,
+    float alpha,
+    float const *A,
+    int lda,
+    float const *B,
+    int ldb,
+    float beta,
+    float *C,
+    int ldc,
+    cudaStream_t stream )
+{
+
+    // Define type definition for single-precision CUTLASS GEMM with column-major
+    // input matrices and 128x128x8 threadblock tile size.
+    //
+    // Note, GemmTraits<> is a generic template defined for various general matrix product
+    // computations within CUTLASS. It is intended to be maximally flexible, and consequently
+    // it contains numerous template arguments.
+    //
+    // To keep the interface manageable, several helpers are defined for plausible compositions
+    // including the following example for single-precision GEMM. Typical values are used as
+    // default template arguments. See `cutlass/gemm/gemm_traits.h` for more details.
+    //
+    typedef cutlass::gemm::SgemmTraits<
+        cutlass::MatrixLayout::kColumnMajor,   // layout of A matrix
+        cutlass::MatrixLayout::kColumnMajor,   // layout of B matrix
+        cutlass::Shape<8, 128, 128>            // threadblock tile size
+    > GemmTraits;
+
+    // Define a CUTLASS GEMM type from a GemmTraits<> instantiation.
+    typedef cutlass::gemm::Gemm<GemmTraits> Gemm;
+
+    // Construct and initialize CUTLASS GEMM parameters object.
+    //
+    // One of CUTLASS's design patterns is to define parameters objects that are constructible
+    // in host code and passed to kernels by value. These may include pointers, strides, scalars,
+    // and other arguments needed by Gemm and its components.
+    //
+    // The benefits of this pattern are (1.) a structured, composable strategy for passing host-constructible
+    // arguments to kernels and (2.) minimized initialization overhead on kernel entry.
+    //
+    typename Gemm::Params params;
+
+    int result = params.initialize(
+        M,     // GEMM M dimension
+        N,     // GEMM N dimension
+        K,     // GEMM K dimension
+        alpha, // scalar alpha
+        A,     // matrix A operand
+        lda,
+        B,     // matrix B operand
+        ldb,
+        beta,  // scalar beta
+        C,     // source matrix C
+        ldc,
+        C,     // destination matrix C (may be different memory than source C matrix)
+        ldc );
+
+    if (result) {
+        std::cerr << "Failed to initialize CUTLASS Gemm::Params object." << std::endl;
+        return cudaErrorInvalidValue;
+    }
+
+    // Launch the CUTLASS GEMM kernel.
+    Gemm::launch(params, stream);
+
+    // Return any errors associated with the launch or cudaSuccess if no error.
+    return cudaGetLastError();
+}
 
 
 __global__ void UpdateWeightMat(
@@ -345,21 +435,34 @@ inline void Trainer::forwardOutput(
     const float alpha = 1.0f;
     const float beta = 0.0f;
     // Multiply input matrix by weight matrix
-    cublasErrorCheck( cublasSgemm(
-        cublasHandle,
-        CUBLAS_OP_N,
-        CUBLAS_OP_N,
+    // cublasErrorCheck( cublasSgemm(
+    //     cublasHandle,
+    //     CUBLAS_OP_N,
+    //     CUBLAS_OP_N,
+    //     numInstances,
+    //     connection.numFeaturesOut,
+    //     connection.numFeaturesIn,
+    //     &alpha,
+    //     sourceLayer.dOutputMat,
+    //     numInstances,
+    //     connection.dWeightMat,
+    //     connection.numFeaturesIn,
+    //     &beta,
+    //     targetLayer.dOutputMat,
+    //     numInstances ) );
+    cudaErrorCheck( CutlassSgemmNN(
         numInstances,
         connection.numFeaturesOut,
         connection.numFeaturesIn,
-        &alpha,
+        alpha,
         sourceLayer.dOutputMat,
         numInstances,
         connection.dWeightMat,
         connection.numFeaturesIn,
-        &beta,
+        beta,
         targetLayer.dOutputMat,
-        numInstances ) );
+        numInstances,
+        stream ) );
     actFunction->forwardActivate(
         targetLayer,
         stream );
