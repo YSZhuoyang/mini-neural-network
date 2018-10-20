@@ -47,7 +47,7 @@ cudaError_t CutlassSgemmNN(
     typedef cutlass::gemm::SgemmTraits<
         cutlass::MatrixLayout::kColumnMajor,   // layout of A matrix
         cutlass::MatrixLayout::kColumnMajor,   // layout of B matrix
-        cutlass::Shape<8, 128, 128>            // threadblock tile size
+        cutlass::Shape<8, 32, 64>            // threadblock tile size
     > GemmTraits;
 
     // Define a CUTLASS GEMM type from a GemmTraits<> instantiation.
