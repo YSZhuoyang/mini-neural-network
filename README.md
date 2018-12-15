@@ -20,7 +20,7 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
                                       |       -------------       |
                                       |       |           |       |
 
-             ------  biasInput -----  *       *   *   *
+             ------  biasInput -----  *       *   *   *   *
              |
              |           -----------  *       *   *   *   *
         numFeatures      |            *       *   *   *   *       *
