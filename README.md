@@ -24,8 +24,7 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
              |
              |           -----------  *       *   *   *   *
         numFeatures      |            *       *   *   *   *       *
-             |        numNodes        *       *   *   *   *       *
-             |           |            *       *   *   *   *
+             |        numNodes        *       *   *   *   *
              |           |            *       *   *   *   *
              ------      -----------  *       *   *   *
 
