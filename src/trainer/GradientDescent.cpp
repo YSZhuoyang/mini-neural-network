@@ -32,7 +32,6 @@ cudaError_t CutlassSgemmNN(
     int ldc,
     cudaStream_t stream )
 {
-
     // Define type definition for single-precision CUTLASS GEMM with column-major
     // input matrices and 128x128x8 threadblock tile size.
     //
@@ -47,7 +46,7 @@ cudaError_t CutlassSgemmNN(
     typedef cutlass::gemm::SgemmTraits<
         cutlass::MatrixLayout::kColumnMajor,   // layout of A matrix
         cutlass::MatrixLayout::kColumnMajor,   // layout of B matrix
-        cutlass::Shape<8, 32, 64>            // threadblock tile size
+        cutlass::Shape<8, 32, 64>              // threadblock tile size
     > GemmTraits;
 
     // Define a CUTLASS GEMM type from a GemmTraits<> instantiation.
