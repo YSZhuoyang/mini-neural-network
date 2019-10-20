@@ -9,6 +9,8 @@
 // Defines cutlass::gemm::SgemmTraits, the structural components for single-precision GEMM
 #include "lib/cutlass/cutlass/gemm/sgemm_traits.h"
 
+#include "include/act/S.hpp"
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -449,7 +451,7 @@ inline void Trainer::forwardOutput(
     //     &beta,
     //     targetLayer.dOutputMat,
     //     numInstances ) );
-    cudaErrorCheck( CutlassSgemmNN(
+    cudaErrorCheck( CutlassSigmoidSgemmNN(
         numInstances,
         connection.numFeaturesOut,
         connection.numFeaturesIn,
@@ -462,9 +464,9 @@ inline void Trainer::forwardOutput(
         targetLayer.dOutputMat,
         numInstances,
         stream ) );
-    actFunction->forwardActivate(
-        targetLayer,
-        stream );
+    // actFunction->forwardActivate(
+    //     targetLayer,
+    //     stream );
 }
 
 inline void Trainer::backPropError(
