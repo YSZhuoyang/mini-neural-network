@@ -1,8 +1,8 @@
 
+#include "ActivationFunction.hpp"
+
 #ifndef HYPER_TANGENT_HPP
 #define HYPER_TANGENT_HPP
-
-#include "ActivationFunction.hpp"
 
 
 namespace MiniNeuralNetwork

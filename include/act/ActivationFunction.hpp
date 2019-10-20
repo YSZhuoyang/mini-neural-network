@@ -1,9 +1,9 @@
 
+#include "include/model/Layer.hpp"
+#include "include/model/Connection.hpp"
+
 #ifndef ACTIVATION_FUNCTION_HPP
 #define ACTIVATION_FUNCTION_HPP
-
-#include "include/datastruct/Layer.hpp"
-#include "include/datastruct/Connection.hpp"
 
 
 namespace MiniNeuralNetwork

@@ -1,14 +1,14 @@
 
-#ifndef HELPER_HPP
-#define HELPER_HPP
-
-#include "include/datastruct/BasicDataStructures.hpp"
+#include "include/model/BasicDataStructures.hpp"
 #include <stdio.h>
 #include <time.h>
 #include <algorithm>
 #include <memory>
 #include <vector>
 #include <random>
+
+#ifndef HELPER_HPP
+#define HELPER_HPP
 
 
 using namespace BasicDataStructures;

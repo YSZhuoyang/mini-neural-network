@@ -1,5 +1,5 @@
 
-#include <cuda_runtime.h>
+// #include <cuda_runtime.h>
 #include "cublas_v2.h"
 
 #ifndef BASIC_DATA_STRUCTURES_HPP

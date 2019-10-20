@@ -3,7 +3,7 @@
 #define ARFF_IMPORTER_HPP
 
 
-#include "include/datastruct/BasicDataStructures.hpp"
+#include "include/model/BasicDataStructures.hpp"
 #include "include/util/Helper.hpp"
 #include <string>
 

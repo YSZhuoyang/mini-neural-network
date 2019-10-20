@@ -1,8 +1,8 @@
 
+#include "ActivationFunction.hpp"
+
 #ifndef RELU_HPP
 #define RELU_HPP
-
-#include "ActivationFunction.hpp"
 
 
 namespace MiniNeuralNetwork

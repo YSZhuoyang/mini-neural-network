@@ -5,24 +5,24 @@
 BUILDDIR = build
 BINDIR = bin
 
-DATAHEADERDIR = include/datastruct
+DATAHEADERDIR = include/model
 ACTHEADERDIR = include/act
 TRAINERHEADERDIR = include/trainer
 UTILHEADERDIR = include/util
 
-DATASRCDIR = src/datastruct
+DATASRCDIR = src/model
 ACTSRCDIR = src/act
 TRAINERSRCDIR = src/trainer
 UTILSRCDIR = src/util
 
 INCACTSRC = src/act/../..
-INCDATASRC = src/datastruct/../..
+INCDATASRC = src/model/../..
 INCTRAINERSRC = src/trainer/../..
 INCUTILSRC = src/util/../..
 INCLUDECUTLASS = lib/cutlass
 
 INCACTHEADER = include/act/../..
-INCDATAHEADER = include/datastruct/../..
+INCDATAHEADER = include/model/../..
 INCTRAINERHEADER = include/trainer/../..
 INCUTILHEADER = include/util/../../
 

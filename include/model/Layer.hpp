@@ -1,8 +1,8 @@
 
+#include "include/util/Helper.hpp"
+
 #ifndef LAYER_HPP
 #define LAYER_HPP
-
-#include "include/util/Helper.hpp"
 
 
 namespace MiniNeuralNetwork
