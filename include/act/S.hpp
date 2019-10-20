@@ -1,6 +1,13 @@
 
+#include "include/act/ActivationFunction.hpp"
+
+// Defines cutlass::gemm::Gemm, the generic Gemm computation template class.
 #include "lib/cutlass/cutlass/gemm/gemm.h"
+// Defines cutlass::gemm::SgemmTraits, the structural components for single-precision GEMM
+#include "lib/cutlass/cutlass/gemm/sgemm_traits.h"
 #include "lib/cutlass/cutlass/fragment_multiply_add.h"
+
+#include <iostream>
 
 namespace MiniNeuralNetwork
 {
@@ -54,7 +61,7 @@ public:
         mad.multiply(alpha_, accum, output);
 
         for (int i = 0; i < FragmentB_::kElements; ++i)
-            output[i] = 1.0f / (1.0f + expf( -output[i] ));
+            output[i] = 1.0f / (1.0f + expf(-output[i]));
     }
 
     /// Evaluate the functor.
@@ -68,7 +75,7 @@ public:
         mad.multiply_add(alpha_, accum, tmp, output);
 
         for (int i = 0; i < FragmentB_::kElements; ++i)
-            output[i] = 1.0f / (1.0f + expf( -output[i] ));//max(FragmentB_::Element(0), output[i]);
+            output[i] = 1.0f / (1.0f + expf(-output[i])); //max(FragmentB_::Element(0), output[i]);
     }
 
 private:
