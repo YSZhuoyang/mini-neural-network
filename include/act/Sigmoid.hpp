@@ -1,8 +1,8 @@
 
+#include "ActivationFunction.hpp"
+
 #ifndef SIGMOID_HPP
 #define SIGMOID_HPP
-
-#include "ActivationFunction.hpp"
 
 
 namespace MiniNeuralNetwork
