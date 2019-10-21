@@ -345,8 +345,8 @@ inline void Trainer::forwardOutput(
     cublasHandle_t cublasHandle,
     cudaStream_t stream )
 {
-    const float alpha = 1.0f;
-    const float beta = 0.0f;
+    // const float alpha = 1.0f;
+    // const float beta = 0.0f;
     // Multiply input matrix by weight matrix
     // cublasErrorCheck( cublasSgemm(
     //     cublasHandle,
@@ -367,12 +367,10 @@ inline void Trainer::forwardOutput(
         numInstances,
         connection.numFeaturesOut,
         connection.numFeaturesIn,
-        alpha,
         sourceLayer.dOutputMat,
         numInstances,
         connection.dWeightMat,
         connection.numFeaturesIn,
-        beta,
         targetLayer.dOutputMat,
         numInstances,
         stream ) );
