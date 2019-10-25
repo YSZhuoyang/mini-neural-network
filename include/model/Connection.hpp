@@ -2,7 +2,7 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include "include/util/Helper.hpp"
+#include "util/Helper.hpp"
 
 
 namespace MiniNeuralNetwork

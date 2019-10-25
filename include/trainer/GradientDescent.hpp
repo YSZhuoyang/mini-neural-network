@@ -1,5 +1,5 @@
 
-#include "include/model/MiniNeuralNets.hpp"
+#include "model/MiniNeuralNets.hpp"
 
 #ifndef GRADIENT_DESCENT_HPP
 #define GRADIENT_DESCENT_HPP
@@ -43,14 +43,6 @@ namespace MiniNeuralNetwork
                 const float regularParam,
                 cudaStream_t stream1,
                 cudaStream_t stream2 );
-            inline void forwardOutput(
-                const Layer& sourceLayer,
-                const Layer& targetLayer,
-                const Connection& connection,
-                const unsigned int numInstances,
-                const std::shared_ptr<ActivationFunction> actFunction,
-                cublasHandle_t cublasHandle,
-                cudaStream_t stream );
             inline void backPropError(
                 const Layer& sourceLayer,
                 const Layer& targetLayer,

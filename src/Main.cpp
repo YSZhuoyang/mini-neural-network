@@ -1,9 +1,9 @@
 
-#include "include/util/ArffImporter.hpp"
-#include "include/act/Sigmoid.hpp"
-#include "include/act/HyperTangent.hpp"
-#include "include/act/Relu.hpp"
-#include "include/trainer/GradientDescent.hpp"
+#include "util/ArffImporter.hpp"
+#include "act/Sigmoid.hpp"
+// #include "act/HyperTangent.hpp"
+// #include "act/Relu.hpp"
+#include "trainer/GradientDescent.hpp"
 
 
 int main()

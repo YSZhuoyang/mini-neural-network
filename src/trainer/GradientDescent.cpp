@@ -1,6 +1,5 @@
 
-#include "include/trainer/GradientDescent.hpp"
-#include "include/act/S.hpp"
+#include "trainer/GradientDescent.hpp"
 
 #include <iostream>
 
@@ -259,13 +258,11 @@ inline void Trainer::forwardProp(
         printf( "layer %d to layer %d: Forward output ...\n", i, i + 1 );
         // Compute Z(n): W x A(n - 1)
         // Compute A(n): g(Z(n))
-        forwardOutput(
+        neuralNets->activationFunctions[i]->forwardActivate(
             layers[i],
             layers[i + 1],
             connections[i],
             numInstances,
-            neuralNets->activationFunctions[i],
-            cublasHandle,
             stream1 );
     }
 }
@@ -296,6 +293,9 @@ inline void Trainer::backwardProp(
         printf( "layer %d to layer %d: Backprop error ...\n", i + 1, i );
         cublasErrorCheck( cublasSetStream( cublasHandle, stream2 ) );
         // Compute dZ(n - 1): WT x dZ(n) * g'(z(n))
+        // neuralNets->activationFunctions[i - 1]->backwardActivate(
+        //     targetLayer,
+        //     stream );
         backPropError(
             layers[i + 1],
             layers[i],
@@ -334,49 +334,6 @@ inline void Trainer::backwardProp(
         regularParam,
         cublasHandle,
         stream1 );
-}
-
-inline void Trainer::forwardOutput(
-    const Layer& sourceLayer,
-    const Layer& targetLayer,
-    const Connection& connection,
-    const unsigned int numInstances,
-    const std::shared_ptr<ActivationFunction> actFunction,
-    cublasHandle_t cublasHandle,
-    cudaStream_t stream )
-{
-    // const float alpha = 1.0f;
-    // const float beta = 0.0f;
-    // Multiply input matrix by weight matrix
-    // cublasErrorCheck( cublasSgemm(
-    //     cublasHandle,
-    //     CUBLAS_OP_N,
-    //     CUBLAS_OP_N,
-    //     numInstances,
-    //     connection.numFeaturesOut,
-    //     connection.numFeaturesIn,
-    //     &alpha,
-    //     sourceLayer.dOutputMat,
-    //     numInstances,
-    //     connection.dWeightMat,
-    //     connection.numFeaturesIn,
-    //     &beta,
-    //     targetLayer.dOutputMat,
-    //     numInstances ) );
-    cudaErrorCheck( CutlassSigmoidSgemmNN(
-        numInstances,
-        connection.numFeaturesOut,
-        connection.numFeaturesIn,
-        sourceLayer.dOutputMat,
-        numInstances,
-        connection.dWeightMat,
-        connection.numFeaturesIn,
-        targetLayer.dOutputMat,
-        numInstances,
-        stream ) );
-    // actFunction->forwardActivate(
-    //     targetLayer,
-    //     stream );
 }
 
 inline void Trainer::backPropError(

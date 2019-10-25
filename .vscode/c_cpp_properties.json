@@ -39,10 +39,11 @@
                 "/usr/include",
                 "/usr/local/cuda/targets/x86_64-linux/include",
                 "/usr/local/cuda/include",
-                "${workspaceFolder}"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/lib/cutlass"
             ],
             "defines": [],
-            "intelliSenseMode": "clang-x64",
+            "intelliSenseMode": "gcc-x64",
             "browse": {
                 "path": [
                     "/usr/include/c++/7",
@@ -55,7 +56,8 @@
                     "/usr/include",
                     "/usr/local/cuda/targets/x86_64-linux/include",
                     "/usr/local/cuda/include",
-                    "${workspaceFolder}"
+                    "${workspaceFolder}/include",
+                    "${workspaceFolder}/lib/cutlass"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

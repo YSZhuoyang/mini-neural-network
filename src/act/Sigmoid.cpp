@@ -1,17 +1,6 @@
 
-#include "include/act/Sigmoid.hpp"
+#include "act/Sigmoid.hpp"
 
-
-__global__ void Sigmoid(
-    float* __restrict__ dOutputMat,
-    const unsigned int subMatSize )
-{
-    const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
-    if (eleId >= subMatSize) return;
-
-    float output = dOutputMat[eleId];
-    dOutputMat[eleId] = 1.0f / (1.0f + expf( -output ));
-}
 
 __global__ void DSigmoid(
     float* __restrict__ dErrorMat,
@@ -60,18 +49,23 @@ unsigned short SigmoidFunction::standardizeOutput( float output )
 }
 
 void SigmoidFunction::forwardActivate(
+    const Layer& sourceLayer,
     const Layer& targetLayer,
+    const Connection& connection,
+    const unsigned int numInstances,
     cudaStream_t stream )
 {
-    Sigmoid<<<
-        targetLayer.sigKernalConfig.gridDim,
-        targetLayer.sigKernalConfig.blockDim,
-        0,
-        stream >>>(
-            targetLayer.dOutputMat,
-            // Error mat size = output mat size without X0s
-            targetLayer.errorMatSize );
-    cudaErrorCheck( cudaGetLastError() );
+    cudaErrorCheck( CutlassSgemmNNWithEpilogue<GemmWithSigmoidEpilogue>(
+        numInstances,
+        connection.numFeaturesOut,
+        connection.numFeaturesIn,
+        sourceLayer.dOutputMat,
+        numInstances,
+        connection.dWeightMat,
+        connection.numFeaturesIn,
+        targetLayer.dOutputMat,
+        numInstances,
+        stream ) );
 }
 
 void SigmoidFunction::backwardActivate(

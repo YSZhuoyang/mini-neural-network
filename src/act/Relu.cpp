@@ -1,5 +1,5 @@
 
-#include "include/act/Relu.hpp"
+#include "act/Relu.hpp"
 
 
 __global__ void Relu(
@@ -34,18 +34,12 @@ unsigned short ReluFunction::standardizeOutput( float output )
 }
 
 void ReluFunction::forwardActivate(
+    const Layer& sourceLayer,
     const Layer& targetLayer,
+    const Connection& connection,
+    const unsigned int numInstances,
     cudaStream_t stream )
 {
-    Relu<<<
-        targetLayer.sigKernalConfig.gridDim,
-        targetLayer.sigKernalConfig.blockDim,
-        0,
-        stream >>>(
-            targetLayer.dOutputMat,
-            // Error mat size = output mat size without X0s
-            targetLayer.errorMatSize );
-    cudaErrorCheck( cudaGetLastError() );
 }
 
 void ReluFunction::backwardActivate(

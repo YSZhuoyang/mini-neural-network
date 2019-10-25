@@ -1,5 +1,5 @@
 
-#include "include/act/HyperTangent.hpp"
+#include "act/HyperTangent.hpp"
 
 
 __global__ void HyperTangent(
@@ -60,18 +60,23 @@ unsigned short HyperTangentFunction::standardizeOutput( float output )
 }
 
 void HyperTangentFunction::forwardActivate(
+    const Layer& sourceLayer,
     const Layer& targetLayer,
+    const Connection& connection,
+    const unsigned int numInstances,
     cudaStream_t stream )
 {
-    HyperTangent<<<
-        targetLayer.sigKernalConfig.gridDim,
-        targetLayer.sigKernalConfig.blockDim,
-        0,
-        stream >>>(
-            targetLayer.dOutputMat,
-            // Error mat size = output mat size without X0s
-            targetLayer.errorMatSize );
-    cudaErrorCheck( cudaGetLastError() );
+    // cudaErrorCheck( CutlassSgemmNNWithEpilogue<GemmWithHyperEpilogue>(
+    //     numInstances,
+    //     connection.numFeaturesOut,
+    //     connection.numFeaturesIn,
+    //     sourceLayer.dOutputMat,
+    //     numInstances,
+    //     connection.dWeightMat,
+    //     connection.numFeaturesIn,
+    //     targetLayer.dOutputMat,
+    //     numInstances,
+    //     stream ) );
 }
 
 void HyperTangentFunction::backwardActivate(
