@@ -1,8 +1,8 @@
 
-#include "include/util/ArffImporter.hpp"
-#include "include/act/Sigmoid.hpp"
-#include "include/act/HyperTangent.hpp"
-#include "include/trainer/GradientDescent.hpp"
+#include "util/ArffImporter.hpp"
+#include "act/Sigmoid.hpp"
+#include "act/HyperTangent.hpp"
+#include "trainer/GradientDescent.hpp"
 
 
 int main()
@@ -30,10 +30,10 @@ int main()
     };
     // Determine activation function between layers
     std::shared_ptr<ActivationFunction> sig = std::make_shared<SigmoidFunction>();
-    std::shared_ptr<ActivationFunction> hTan = std::make_shared<HyperTangentFunction>();
+    // std::shared_ptr<ActivationFunction> hTan = std::make_shared<HyperTangentFunction>();
     std::vector<std::shared_ptr<ActivationFunction>> activationFunctions
     {
-        hTan,
+        sig,
         sig
     };
 

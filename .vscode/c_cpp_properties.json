@@ -39,10 +39,10 @@
                 "/usr/include",
                 "/usr/local/cuda/targets/x86_64-linux/include",
                 "/usr/local/cuda/include",
-                "${workspaceFolder}"
+                "${workspaceFolder}/include"
             ],
             "defines": [],
-            "intelliSenseMode": "clang-x64",
+            "intelliSenseMode": "gcc-x64",
             "browse": {
                 "path": [
                     "/usr/include/c++/7",
@@ -55,7 +55,7 @@
                     "/usr/include",
                     "/usr/local/cuda/targets/x86_64-linux/include",
                     "/usr/local/cuda/include",
-                    "${workspaceFolder}"
+                    "${workspaceFolder}/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

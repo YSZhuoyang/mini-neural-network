@@ -1,5 +1,5 @@
 
-#include "include/model/MiniNeuralNets.hpp"
+#include "model/MiniNeuralNets.hpp"
 
 
 using namespace MiniNeuralNetwork;

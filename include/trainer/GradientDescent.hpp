@@ -1,5 +1,5 @@
 
-#include "include/model/MiniNeuralNets.hpp"
+#include "model/MiniNeuralNets.hpp"
 
 #ifndef GRADIENT_DESCENT_HPP
 #define GRADIENT_DESCENT_HPP

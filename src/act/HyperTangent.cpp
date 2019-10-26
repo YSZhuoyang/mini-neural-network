@@ -1,5 +1,5 @@
 
-#include "include/act/HyperTangent.hpp"
+#include "act/HyperTangent.hpp"
 
 
 __global__ void HyperTangent(

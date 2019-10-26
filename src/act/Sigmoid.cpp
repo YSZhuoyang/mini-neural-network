@@ -1,5 +1,5 @@
 
-#include "include/act/Sigmoid.hpp"
+#include "act/Sigmoid.hpp"
 
 
 __global__ void Sigmoid(

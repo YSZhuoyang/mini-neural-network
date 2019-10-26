@@ -3,9 +3,9 @@
 
 A general perception neural network written in CUDA.
 
-## Gradient Descent training algorithm
+## Gradient Descent
 
-This Gradient Descent algorithm was implemented based on equations from [Machine Learning on Coursera](https://www.coursera.org/learn/machine-learning).
+This Gradient Descent algorithm was implemented based on formulas from [Machine Learning on Coursera](https://www.coursera.org/learn/machine-learning).
 
 ### Supported activation function
 
@@ -13,7 +13,22 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
 * Hyper Tangent.
 * Relu.
 
-### Gragh representation
+### Test Environment
+
+OS: Ubuntu 18.04
+CUDA: 10.1
+GPU: Nvidia GTX 960M
+
+### Build & Run
+
+CD to project root dir and run:
+
+    make clean
+    make
+
+    ./bin/gpu_exec
+
+### Variable Annotations
 
                                  inputLayer   hiddenLayers   outputLayer
                                       |             |             |
@@ -32,7 +47,7 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
                                       |                           |
                                       |---------numLayers---------|
 
-    * (Node): each node * has an input, an output and an error associated with, input of a bias node is always 1.
+    * (Node): each node has an input / source, an output / target and an error associated with, a bias input node is always 1.
     Connection: each connection between a pair of nodes has a weight and an accumulated deltaWeight associated with.
                 (deltaWeight is used for updating weight during the gradient descent)
 
@@ -57,7 +72,6 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
 
     h(x): predicted result given by the model
     y: actual result
-
 
     For i : 1 to N
         Run forward propagation to compute output of each layer, excluding bias node.

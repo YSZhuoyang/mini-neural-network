@@ -1,6 +1,6 @@
 
-#include "include/model/Layer.hpp"
-#include "include/model/Connection.hpp"
+#include "model/Layer.hpp"
+#include "model/Connection.hpp"
 
 #ifndef ACTIVATION_FUNCTION_HPP
 #define ACTIVATION_FUNCTION_HPP

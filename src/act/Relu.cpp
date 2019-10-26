@@ -1,5 +1,5 @@
 
-#include "include/act/Relu.hpp"
+#include "act/Relu.hpp"
 
 
 __global__ void Relu(
