@@ -15,9 +15,9 @@ This Gradient Descent algorithm was implemented based on formulas from [Machine 
 
 ### Test Environment
 
-OS: Ubuntu 18.04
-CUDA: 10.1
-GPU: Nvidia GTX 960M
+* OS: Ubuntu 18.04
+* CUDA: 10.1
+* GPU: Nvidia GTX 960M
 
 ### Build & Run
 
