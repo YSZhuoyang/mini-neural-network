@@ -13,6 +13,17 @@ This Gradient Descent algorithm was implemented based on equations from [Machine
 * Hyper Tangent.
 * Relu.
 
+### Build
+
+    make clean
+    make
+
+### Run
+
+CD to project root dir and run:
+
+    ./bin/gpu_exec
+
 ### Gragh representation
 
                                  inputLayer   hiddenLayers   outputLayer

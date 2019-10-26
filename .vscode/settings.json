@@ -35,6 +35,7 @@
         "memory": "cpp",
         "optional": "cpp",
         "string_view": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "*.cuh": "cpp"
     }
 }
