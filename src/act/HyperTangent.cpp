@@ -80,18 +80,21 @@ void HyperTangentFunction::forwardActivate(
 }
 
 void HyperTangentFunction::backwardActivate(
+    const Layer& sourceLayer,
     const Layer& targetLayer,
+    const Connection& connection,
+    const unsigned int numInstances,
     cudaStream_t stream )
 {
-    DHyperTangent<<<
-        targetLayer.sigKernalConfig.gridDim,
-        targetLayer.sigKernalConfig.blockDim,
-        0,
-        stream >>>(
-            targetLayer.dErrorMat,
-            targetLayer.dOutputMat,
-            targetLayer.errorMatSize );
-    cudaErrorCheck( cudaGetLastError() );
+    // DHyperTangent<<<
+    //     targetLayer.sigKernalConfig.gridDim,
+    //     targetLayer.sigKernalConfig.blockDim,
+    //     0,
+    //     stream >>>(
+    //         targetLayer.dErrorMat,
+    //         targetLayer.dOutputMat,
+    //         targetLayer.errorMatSize );
+    // cudaErrorCheck( cudaGetLastError() );
 }
 
 void HyperTangentFunction::computeOutputLayerError(

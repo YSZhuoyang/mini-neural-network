@@ -19,7 +19,10 @@ namespace MiniNeuralNetwork
             cudaStream_t stream ) final;
 
         void backwardActivate(
+            const Layer& sourceLayer,
             const Layer& targetLayer,
+            const Connection& connection,
+            const unsigned int numInstances,
             cudaStream_t stream ) final;
 
         void computeOutputLayerError(

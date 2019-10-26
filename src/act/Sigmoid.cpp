@@ -2,18 +2,6 @@
 #include "act/Sigmoid.hpp"
 
 
-__global__ void DSigmoid(
-    float* __restrict__ dErrorMat,
-    const float* __restrict__ dOutputMat,
-    const unsigned int errorMatSize )
-{
-    const unsigned int eleId = blockDim.x * blockIdx.x + threadIdx.x;
-    if (eleId >= errorMatSize) return;
-
-    float error = dOutputMat[eleId] * (1.0f - dOutputMat[eleId]);
-    dErrorMat[eleId] *= error;
-}
-
 __global__ void ComputeSigmoidOutputLayerError(
     float* __restrict__ dErrorMat,
     float* __restrict__ dOutputMat,
@@ -59,28 +47,43 @@ void SigmoidFunction::forwardActivate(
         numInstances,
         connection.numFeaturesOut,
         connection.numFeaturesIn,
+        1.0f,
         sourceLayer.dOutputMat,
         numInstances,
         connection.dWeightMat,
         connection.numFeaturesIn,
+        0.0f,
+        targetLayer.dOutputMat,
+        numInstances,
         targetLayer.dOutputMat,
         numInstances,
         stream ) );
 }
 
 void SigmoidFunction::backwardActivate(
+    const Layer& sourceLayer,
     const Layer& targetLayer,
+    const Connection& connection,
+    const unsigned int numInstances,
     cudaStream_t stream )
 {
-    DSigmoid<<<
-        targetLayer.sigKernalConfig.gridDim,
-        targetLayer.sigKernalConfig.blockDim,
-        0,
-        stream >>>(
-            targetLayer.dErrorMat,
-            targetLayer.dOutputMat,
-            targetLayer.errorMatSize );
-    cudaErrorCheck( cudaGetLastError() );
+    cudaErrorCheck(CutlassSgemmNNWithEpilogue<GemmWithDSigmoidEpilogue>(
+        numInstances,
+        // Exclude bias
+        targetLayer.numNodes,
+        sourceLayer.numNodes,
+        1.0f,
+        sourceLayer.dErrorMat,
+        numInstances,
+        connection.dWeightMat,
+        targetLayer.numFeatures,
+        1.0f,
+        targetLayer.dOutputMat,
+        numInstances,
+        targetLayer.dErrorMat,
+        numInstances,
+        stream
+    ));
 }
 
 void SigmoidFunction::computeOutputLayerError(

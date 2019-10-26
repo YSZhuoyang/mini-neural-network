@@ -43,18 +43,21 @@ void ReluFunction::forwardActivate(
 }
 
 void ReluFunction::backwardActivate(
+    const Layer& sourceLayer,
     const Layer& targetLayer,
+    const Connection& connection,
+    const unsigned int numInstances,
     cudaStream_t stream )
 {
-    DRelu<<<
-        targetLayer.sigKernalConfig.gridDim,
-        targetLayer.sigKernalConfig.blockDim,
-        0,
-        stream >>>(
-            targetLayer.dErrorMat,
-            targetLayer.dOutputMat,
-            targetLayer.errorMatSize );
-    cudaErrorCheck( cudaGetLastError() );
+    // DRelu<<<
+    //     targetLayer.sigKernalConfig.gridDim,
+    //     targetLayer.sigKernalConfig.blockDim,
+    //     0,
+    //     stream >>>(
+    //         targetLayer.dErrorMat,
+    //         targetLayer.dOutputMat,
+    //         targetLayer.errorMatSize );
+    // cudaErrorCheck( cudaGetLastError() );
 }
 
 void ReluFunction::computeOutputLayerError(

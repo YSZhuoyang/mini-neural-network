@@ -7,7 +7,6 @@
 
 namespace MiniNeuralNetwork
 {
-    using namespace MyHelper;
     using namespace cutlass::gemm;
 
     template <typename Scalar_, typename FragmentMultiplyAdd_ = cutlass::gemm::FragmentMultiplyAdd<Scalar_, Scalar_>>
@@ -115,7 +114,7 @@ namespace MiniNeuralNetwork
             // The alpha/beta scaling params.
             Scalar alpha, beta;
 
-            Params(Scalar _alpha = 1.0f, Scalar _beta = 0.0f)
+            Params(Scalar _alpha = 1.0f, Scalar _beta = 1.0f)
                 : alpha(_alpha), beta(_beta) {}
 
             // Initialize the parameters.
@@ -159,19 +158,23 @@ namespace MiniNeuralNetwork
             FragmentMultiplyAdd mad;
             FragmentB_ tmp;
 
-            mad.multiply(params.beta, old, tmp);
-            mad.multiply_add(params.alpha, accum, tmp, output);
+            for (int i = 0; i < FragmentB_::kElements; ++i)
+                tmp[i] = old[i] * (1.0f - old[i]);
+
+            // mad.multiply(params.beta, old, tmp);
+            mad.multiply(params.alpha, accum, output);
+            // mad.multiply_add(params.alpha, accum, tmp, output);
 
             for (int i = 0; i < FragmentB_::kElements; ++i)
-                output[i] = output[i] * (1.0f - output[i]);
+                output[i] *= tmp[i];
         }
 
         Params params;
     };
-    
+
     typedef cutlass::gemm::Gemm<SgemmTraits<
         cutlass::MatrixLayout::kColumnMajor, // layout of A matrix
-        cutlass::MatrixLayout::kColumnMajor, // layout of B matrix
+        cutlass::MatrixLayout::kRowMajor,    // layout of B matrix
         cutlass::Shape<8, 32, 64>,           // threadblock tile size
         DSigmoidEpilogueFunctor<float>>>
         GemmWithDSigmoidEpilogue;
@@ -189,7 +192,10 @@ namespace MiniNeuralNetwork
             cudaStream_t stream ) final;
 
         void backwardActivate(
+            const Layer& sourceLayer,
             const Layer& targetLayer,
+            const Connection& connection,
+            const unsigned int numInstances,
             cudaStream_t stream ) final;
 
         void computeOutputLayerError(

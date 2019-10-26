@@ -293,16 +293,11 @@ inline void Trainer::backwardProp(
         printf( "layer %d to layer %d: Backprop error ...\n", i + 1, i );
         cublasErrorCheck( cublasSetStream( cublasHandle, stream2 ) );
         // Compute dZ(n - 1): WT x dZ(n) * g'(z(n))
-        // neuralNets->activationFunctions[i - 1]->backwardActivate(
-        //     targetLayer,
-        //     stream );
-        backPropError(
+        neuralNets->activationFunctions[i - 1]->backwardActivate(
             layers[i + 1],
             layers[i],
             connections[i],
             numInstances,
-            neuralNets->activationFunctions[i - 1],
-            cublasHandle,
             stream2 );
         cudaErrorCheck( cudaEventRecord( backPropCompletes[i - 1], stream2 ) );
 
@@ -334,39 +329,6 @@ inline void Trainer::backwardProp(
         regularParam,
         cublasHandle,
         stream1 );
-}
-
-inline void Trainer::backPropError(
-    const Layer& sourceLayer,
-    const Layer& targetLayer,
-    const Connection& connection,
-    const unsigned int numInstances,
-    const std::shared_ptr<ActivationFunction> actFunction,
-    cublasHandle_t cublasHandle,
-    cudaStream_t stream )
-{
-    const float alpha = 1.0f;
-    const float beta = 0.0f;
-
-    cublasErrorCheck( cublasSgemm(
-        cublasHandle,
-        CUBLAS_OP_N,
-        CUBLAS_OP_T,
-        numInstances,
-        // Exclude bias
-        targetLayer.numNodes,
-        sourceLayer.numNodes,
-        &alpha,
-        sourceLayer.dErrorMat,
-        numInstances,
-        connection.dWeightMat,
-        targetLayer.numFeatures,
-        &beta,
-        targetLayer.dErrorMat,
-        numInstances ) );
-    actFunction->backwardActivate(
-        targetLayer,
-        stream );
 }
 
 inline void Trainer::updateWeights(

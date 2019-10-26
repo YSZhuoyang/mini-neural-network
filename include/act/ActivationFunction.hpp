@@ -19,12 +19,16 @@ namespace MiniNeuralNetwork
         int M,
         int N,
         int K,
+        float alpha,
         float const *A,
         int lda,
         float const *B,
         int ldb,
+        float beta,
         float *C,
         int ldc,
+        float *D,
+        int ldd,
         cudaStream_t stream)
     {
         // Construct and initialize CUTLASS GEMM parameters object.
@@ -42,16 +46,16 @@ namespace MiniNeuralNetwork
             M,    // GEMM M dimension
             N,    // GEMM N dimension
             K,    // GEMM K dimension
-            1.0f, // scalar alpha
+            alpha,// scalar alpha
             A,    // matrix A operand
             lda,
-            B, // matrix B operand
+            B,    // matrix B operand
             ldb,
-            0.0f, // scalar beta
+            beta, // scalar beta
             C,    // source matrix C
             ldc,
-            C, // destination matrix C (may be different memory than source C matrix)
-            ldc);
+            D,    // destination matrix C (may be different memory than source C matrix)
+            ldd);
 
         if (result)
         {
@@ -79,7 +83,10 @@ namespace MiniNeuralNetwork
             cudaStream_t stream ) = 0;
         
         virtual void backwardActivate(
+            const Layer& sourceLayer,
             const Layer& targetLayer,
+            const Connection& connection,
+            const unsigned int numInstances,
             cudaStream_t stream ) = 0;
 
         virtual void computeOutputLayerError(
